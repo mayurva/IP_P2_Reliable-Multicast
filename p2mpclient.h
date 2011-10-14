@@ -1,9 +1,9 @@
 #ifndef P2MPCLIENT
 #define P2MPCLIENT
 typedef struct segment_t {
-	unsigned seq_num : 32;
-	unsigned checksum : 16;
-	unsigned pkt_type : 16;
+	uint32_t seq_num;
+	uint16_t checksum;
+	uint16_t pkt_type;
 	char *data;
 	int *ack;
 } segment;
