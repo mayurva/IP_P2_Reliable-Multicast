@@ -4,7 +4,7 @@
 #include<fcntl.h>
 #include<math.h>
 #include<stdint.h>
-
+#include<string.h>
 #include"p2mpclient.h"
 
 int n;
@@ -12,6 +12,49 @@ int mss;
 FILE *file;
 int server_port;
 segment *send_buffer;
+
+// Read 1 MSS worth data from file and return the data - reads byte-by-byte
+char * read_file()
+{
+    int j=0;
+    
+    char *temp_buf = (char *)malloc(mss*sizeof(char));
+    char buff[1];
+
+    for(j=0;j<mss;j++)
+    {
+    if((fread(buff,sizeof(char),1,file))<0)
+{
+perror("\nRead error");
+exit(1);
+}
+temp_buf[j] = buff[0];
+   }
+   temp_buf[j] = '\0';
+   return temp_buf;
+}
+
+// appends header to payload
+void create_segments(uint32_t seg_num)
+{
+send_buffer[seg_num].seq_num = seg_num%MAX_SEQ;
+send_buffer[seg_num].pkt_type = 0x5555; //indicates data packet - 0101010101010101
+// send_buffer[seg_num].checksum = create_checksum(send_buffer[seg_num].data);
+send_buffer[seg_num].ack = NULL;
+
+}
+
+void initialize_sender_buffer()
+{
+int i=0;
+send_buffer = (segment *)malloc(n*sizeof(segment));
+for(i=0;i<n;i++){
+send_buffer[i].data = (char *)malloc(mss*sizeof(char));
+strcpy(send_buffer[i].data, read_file()); //copy 1 segment data into sender buffer
+send_buffer[i].data[strlen(send_buffer[i].data)] = '\0';
+create_segments((uint32_t) i);
+}
+}
 
 int init_sender(int argc,char *argv[])
 {
@@ -37,6 +80,8 @@ int init_sender(int argc,char *argv[])
 	/*Add the code to process server IP addrs entered from command line
 	for(i=argc-5;i>=1;i--){
 	}*/
+	initialize_sender_buffer();	
+
 }
 
 // divide segment's data into 2 byte words
@@ -100,50 +145,10 @@ return ((uint16_t) sum);
 }
 
 
-// Read 1 MSS worth data from file and return the data - reads byte-by-byte
-char * read_file()
-{
-    int j=0;
-    
-    char *temp_buf = (char *)malloc(mss*sizeof(char));
-    char buff[1];
 
-    for(j=0;j<mss;j++)
-    {
-    if((fread(buff,sizeof(char),1,file))<0)
-{
-perror("\nRead error");
-exit(1);
-}
-temp_buf[j] = buff[0];
-   }
-   temp_buf[j] = '\0';
-   return temp_buf;
-}
-
-// appends header to payload
-void create_segments(uint32_t seg_num)
-{
-send_buffer[seg_num].seq_num = seg_num%MAX_SEQ;
-send_buffer[seg_num].pkt_type = 0x5555; //indicates data packet - 0101010101010101
-// send_buffer[seg_num].checksum = create_checksum(send_buffer[seg_num].data);
-send_buffer[seg_num].ack = NULL;
-
-}
 
 //When the protocol starts, need to initialize sender buffer with N segments
 
-void initialize_sender_buffer()
-{
-int i=0;
-send_buffer = (segment *)malloc(n*sizeof(segment));
-for(i=0;i<n;i++){
-send_buffer[i].data = (char *)malloc(mss*sizeof(char));
-strcpy(send_buffer[i].data, read_file()); //copy 1 segment data into sender buffer
-send_buffer[i].data[strlen(send_buffer[i].data)] = '\0';
-create_segments((uint32_t) i);
-}
-}
 
 void print_segments()
 {

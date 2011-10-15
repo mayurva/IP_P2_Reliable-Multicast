@@ -11,7 +11,7 @@ int main(int argc,char *argv[])
 	do
 	{
 		ret_val = recv_data();
-		if(!ret_val)	send_ack();
+		if(ret_val)	send_ack();
 	}while(!last_packet);
 	return 0;
 }
