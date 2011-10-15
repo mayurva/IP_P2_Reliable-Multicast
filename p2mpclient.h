@@ -1,9 +1,6 @@
 #ifndef P2MPCLIENT
 #define P2MPCLIENT
 
-#include<stdint.h>
-#include<unistd.h>
-
 #define MAX_SEQ 4294967295
 
 typedef struct segment_t{
