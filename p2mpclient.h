@@ -1,6 +1,7 @@
 #ifndef P2MPCLIENT
 #define P2MPCLIENT
-typedef struct segment_t {
+#include<stdint.h>
+typedef struct segment_t{
 	uint32_t seq_num;
 	uint16_t checksum;
 	uint16_t pkt_type;
@@ -8,6 +9,7 @@ typedef struct segment_t {
 	int *ack;
 } segment;
 extern int mss;
-extern int N;
-extern char *file_name;
+extern int n;
+extern int file;
+extern int server_port;
 #endif
