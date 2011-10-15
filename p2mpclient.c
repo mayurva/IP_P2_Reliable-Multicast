@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
-
+#include<unistd.h>
+#include<fcntl.h>
 #include"p2mpclient.h"
 
 int main(int argc, char *argv[])
@@ -16,7 +17,7 @@ int main(int argc, char *argv[])
 	printf("MSS is:%d\n",mss);
 	n = atoi(argv[argc-2]);
 	printf("Window size:%d\n",n);
-	if(file = open(argv[argc-3]) == -1)
+	if(!(file = fopen(argv[argc-3],"rb")))
 	{
 		printf("File opening failed\n");
 		exit(-1);
@@ -28,6 +29,7 @@ int main(int argc, char *argv[])
 	for(i=argc-5;i>=1;i--){
 	}*/
 
+	initialize_sender_buffer();
 	rdt_send();
 }
 	

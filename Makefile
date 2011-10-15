@@ -8,10 +8,10 @@ all: $(objects) client server
 $(objects): $(includes)
 
 client: 
-	cc -o p2mpclient p2mpclient.o p2mputil.o
+	cc -o p2mpclient p2mpclient.o p2mputil.o -lm
 
 server: 
-	cc -o p2mpserver p2mpserver.o
+	cc -o p2mpserver p2mpserver.o -lm
 
 .PHONY: clean 
 clean:
