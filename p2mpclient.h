@@ -2,7 +2,7 @@
 #define P2MPCLIENT
 
 #define MAX_SEQ 4294967295
-
+#define MAXLEN 5000
 typedef struct segment_t{
 	uint32_t seq_num;
 	uint16_t checksum;
@@ -11,12 +11,12 @@ typedef struct segment_t{
 	int *ack;
 } segment;
 
-/*
-typedef struct send_buffer_t{
-	segment *window;
-} send_buffer;
-*/
 
+typedef struct host_info_t{
+//      int portnum;
+        char iface_name[64];
+        char ip_addr[128];
+} host_info;
 
 extern segment *send_buffer; //sender side buffer = array of segments
 //extern send_buffer sbuf; 

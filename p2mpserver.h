@@ -1,6 +1,6 @@
 #ifndef P2MPSERVER
 #define P2MPSERVER
-
+#define MAXLEN 5000
 #define FALSE 0
 #define TRUE 1
 
