@@ -10,16 +10,24 @@
 
 #include"p2mpserver.h"
 
+segment curr_pkt,*recv_buffer;
+int curr_pkt_seq_num;
+//segment *recv_ack_buffer;
+
+
 int last_packet;
 int n;
 FILE *file;
 int server_port;
 float p;
-segment *recv_buffer;
-segment curr_pkt;
+//segment curr_pkt,*recv_buffer;
+//segment curr_pkt;
 int buf_counter;
 uint32_t next_seg_seq_num;
-int soc;
+int soc,send_soc;
+struct sockaddr_in sender_addr;
+
+
 
 uint16_t compute_checksum(char *data)
 {
@@ -52,7 +60,7 @@ return ((uint16_t) sum);
 int init_recv_window()
 {
 	recv_buffer = (segment*)malloc(n*sizeof(segment));
-	printf("Allocated %d segments\n",n);
+	printf("Allocated %d segments of Total length: %d\n",n,(int)(n*sizeof(segment)));
 	next_seg_seq_num = 0;	
 	buf_counter = 0;
 }
@@ -96,8 +104,51 @@ int init_receiver(int argc, char *argv[])
 	last_packet = 1;
 }
 
+
+
+int udt_send(int seg_index)
+{
+//        struct sockaddr_in their_addr; // connector's address information
+        struct hostent *he;
+        int numbytes;
+        int addr_len;
+        int len;
+        char buf[MAXLEN];
+
+        strcpy(buf,"");
+
+	//SEND THE ACK For Current Packet (seg_index)
+	//Right now overrighting the recv_buffer's pkt_type to indicate that it is now an ACK Packet (Logically) ..
+
+	recv_buffer[seg_index].pkt_type = 0xAAAA;  //indicates ACK packet - 1010101010101010
+        sprintf(buf,"Seq Number:%d\nChecksum:%d\npacket Type:%d\n",recv_buffer[seg_index].seq_num,recv_buffer[seg_index].checksum,recv_buffer[seg_index].pkt_type);
+        
+
+	//socket to send
+        if ((send_soc = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
+                printf("Error creating socket\n");
+                exit(-1);
+        }
+
+
+        len = strlen(buf);
+        printf("\n\n***********ACK Bytes Sent: %d",len);
+        if (sendto(send_soc,buf, len, 0, (struct sockaddr *)&sender_addr, sizeof (sender_addr)) == -1) {
+                printf("Error in sending");
+                exit(-1);
+        }
+
+}
+
+
+
+//Sending ack for the curr_pkt_seq_num  (wrapped around to get correct 'recv_buffer' index)  MSS in 'recv_buffer'
 int send_ack()
 {
+		int index = curr_pkt_seq_num%n;
+		printf("\nSent ACK For Index: %d",index);
+		udt_send(index);
+
 }
 
 int compare_checksum(uint16_t checksum)
@@ -107,21 +158,45 @@ int compare_checksum(uint16_t checksum)
 	return FALSE;
 }
 
+
+int add_to_buffer(int index)
+{
+        printf("Index is %d\n",index);
+        recv_buffer[index].seq_num = curr_pkt.seq_num;
+
+        if((recv_buffer[index].data = (char*)malloc(strlen(curr_pkt.data)*sizeof(char)))==NULL){
+                perror("CANNOT ALLOCATE MEMORY :( : Add to Buffer \n");
+                exit(1);
+        }
+        strcpy(recv_buffer[index].data,curr_pkt.data);
+        //strcat(recv_buffer[index].data,"\0"); 
+
+        printf("Length of CURRPKT DATA: %d\n",(int)strlen(curr_pkt.data));
+	curr_pkt_seq_num = curr_pkt.seq_num;
+        free(curr_pkt.data);
+        return TRUE;
+}
+
+
+
+
+
 int udp_recv()
 {
 	char buf[MAXLEN];
 	int numbytes,data_length;
 	char *a, *b, *c, *d, *e,*f;
-	struct sockaddr_in their_addr; // connector's address information
-	int addr_len = sizeof (their_addr);
+//	struct sockaddr_in their_addr; // connector's address information
+	int addr_len = sizeof (sender_addr);
 	strcpy(buf,"");
-	numbytes=recvfrom(soc, buf, MAXLEN , 0,(struct sockaddr *)&their_addr, &addr_len);
+	numbytes=recvfrom(soc, buf, MAXLEN , 0,(struct sockaddr *)&sender_addr, &addr_len);
 	if(numbytes == -1) {
 		printf(" Error in receiving\n");
 		exit(-1);
 	}
-	
+	printf("\n\n***********8Bytes Received: %d\n",numbytes);	
 //	printf("the received string is%s\n",buf);
+	buf[strlen(buf)] = '\0';
 	a = strtok(buf,"\n");
 	b = strtok(NULL,"\n");
 	c = strtok(NULL,"\n");
@@ -142,24 +217,20 @@ int udp_recv()
 	e = strtok(NULL,":");
 	data_length = (uint16_t)atoi(e);
 
+	fflush(stdout);
 	d[data_length] = '\0'; //delimit the data string	
 
-	printf("seq_num: %d, checksum %x, packet type %x\n data is %s data length is %d\n",curr_pkt.seq_num,curr_pkt.checksum,curr_pkt.pkt_type,d,(int)strlen(d));
-	curr_pkt.data = (char*)malloc(strlen(d));
+//	printf("seq_num: %d, checksum %x, packet type %x\n data is %s data length is %d\n",curr_pkt.seq_num,curr_pkt.checksum,curr_pkt.pkt_type,d,(int)strlen(d));
+	if((curr_pkt.data = (char*)malloc(strlen(d)*sizeof(char)))==NULL)
+	{
+		perror("CANNOT ALLOCATE MEMORY :( For Curr Packet Data\n");
+		exit(1);
+	}
 	strcpy(curr_pkt.data,d);
 	strcat(curr_pkt.data,"\0");
-	printf("Done with receive with data %s\n\n",curr_pkt.data);
+//	printf("Done with receive with data %s\n\n",curr_pkt.data);
 }
 
-int add_to_buffer(int index)
-{
-	printf("Index is %d\n",index);
-	recv_buffer[index].seq_num = curr_pkt.seq_num;
-	recv_buffer[index].data = (char*)malloc(strlen(curr_pkt.data));
-	strcpy(recv_buffer[index].data,curr_pkt.data);
-	free(curr_pkt.data);
-	return TRUE;
-}
 
 int is_in_sequence()
 {
@@ -175,8 +246,20 @@ int is_in_recv_window()
 	return 0;
 }
 
-int write_file()
+
+
+//writing 1 MSS Data into file .. called after checksum comparison
+int write_file(char *temp_buf)
 {
+    	int j=0,numbytes;
+	char buff[1];
+	printf("\nWritten!");
+	if((numbytes=fwrite(temp_buf,strlen(temp_buf),1,file))<0)
+	{
+		perror("\nWrite error");
+		exit(1);
+	}
+	return numbytes;
 }
 
 int process_pkt()
@@ -197,6 +280,10 @@ int recv_data()
 		printf("Checksum mismatch\n");
                 return FALSE;
 	}
+
+
+	//Write this 1 MSS to file
+	write_file(curr_pkt.data);
 	ret_val = is_in_recv_window();
 	if(ret_val == -1)
 		return TRUE;
