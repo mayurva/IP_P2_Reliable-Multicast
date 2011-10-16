@@ -171,7 +171,7 @@ int add_to_buffer(int index)
         strcpy(recv_buffer[index].data,curr_pkt.data);
         //strcat(recv_buffer[index].data,"\0"); 
 
-        printf("Length of CURRPKT DATA: %d\n",(int)strlen(curr_pkt.data));
+        printf("Length of CURRPKT DATA: %d\n",strlen(curr_pkt.data));
 	curr_pkt_seq_num = curr_pkt.seq_num;
 	if(flag)
 	{
@@ -218,7 +218,7 @@ int udp_recv()
 		printf("Error allocating memory\n");
 		exit(-1);
 	}
-	sprintf(curr_pkt.data,"%s",d);
+	strcpy(curr_pkt.data,d);
 	flag = 1;
 /*	f = strtok(NULL,"\n"); //'f' contains the data_length passed from sender
 	d = strtok(NULL,"\0"); //This is not allowed, since d is not a null terminated string now.
@@ -272,7 +272,7 @@ int write_file(char *temp_buf)
 {
     	int j=0,numbytes;
 	char buff[1];
-	printf("\nWritten!");
+	printf("\nWritten! %d bytes",strlen(temp_buf));
 	if((numbytes=fwrite(temp_buf,strlen(temp_buf),1,file))<0)
 	{
 		perror("\nWrite error");
