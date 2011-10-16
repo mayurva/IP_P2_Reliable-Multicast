@@ -110,8 +110,8 @@ int compare_checksum(uint16_t checksum)
 int udp_recv()
 {
 	char buf[MAXLEN];
-	int numbytes;
-	char *a, *b, *c, *d, *e;
+	int numbytes,data_length;
+	char *a, *b, *c, *d, *e,*f;
 	struct sockaddr_in their_addr; // connector's address information
 	int addr_len = sizeof (their_addr);
 	strcpy(buf,"");
@@ -125,7 +125,9 @@ int udp_recv()
 	a = strtok(buf,"\n");
 	b = strtok(NULL,"\n");
 	c = strtok(NULL,"\n");
+	f = strtok(NULL,"\n"); //'f' contains the data_length passed from sender
 	d = strtok(NULL,"\0"); //This is not allowed, since d is not a null terminated string now.
+//	strcat(d,'\0');
 	e = strtok(a,":");
 	e = strtok(NULL,":");
 	curr_pkt.seq_num = (uint32_t)atoi(e);
@@ -135,7 +137,14 @@ int udp_recv()
 	e = strtok(c,":");
 	e = strtok(NULL,":");
 	curr_pkt.pkt_type = (uint16_t)atoi(e);
-	printf("seq_num: %d, checksum %x, packet type %x\n data is %s data length is %d\n",curr_pkt.seq_num,curr_pkt.checksum,curr_pkt.pkt_type,d,strlen(d));
+	
+	e = strtok(f,":");
+	e = strtok(NULL,":");
+	data_length = (uint16_t)atoi(e);
+
+	d[data_length] = '\0'; //delimit the data string	
+
+	printf("seq_num: %d, checksum %x, packet type %x\n data is %s data length is %d\n",curr_pkt.seq_num,curr_pkt.checksum,curr_pkt.pkt_type,d,(int)strlen(d));
 	curr_pkt.data = (char*)malloc(strlen(d));
 	strcpy(curr_pkt.data,d);
 	strcat(curr_pkt.data,"\0");

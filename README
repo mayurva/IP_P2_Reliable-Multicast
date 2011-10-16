@@ -1,3 +1,4 @@
-sssane
 The data is getting transferred correctly.. but there is a problem with tokenizing. We end up with non null terminated string.
-The problem is at line 128 in server util. Comment is added on that line
+The problem is at line 128 in server util. Comment is added on that line.
+
+At the receiver, data part is now delimited. So segments are now constructed properly. But fails for N = 512, MSS = 999. Maybe possible out of order packets. Need to redirect output to a file to check.
