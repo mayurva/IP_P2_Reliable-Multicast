@@ -13,7 +13,7 @@
 segment curr_pkt,*recv_buffer;
 int curr_pkt_seq_num;
 //segment *recv_ack_buffer;
-
+int flag;
 
 int last_packet;
 int n;
@@ -173,7 +173,13 @@ int add_to_buffer(int index)
 
         printf("Length of CURRPKT DATA: %d\n",(int)strlen(curr_pkt.data));
 	curr_pkt_seq_num = curr_pkt.seq_num;
-        free(curr_pkt.data);
+	if(flag)
+	{
+	        free(curr_pkt.data);
+		curr_pkt.data == NULL;
+		flag = 0;
+		printf("freed!!!\n");
+	}
         return TRUE;
 }
 
@@ -186,6 +192,7 @@ int udp_recv()
 	char buf[MAXLEN];
 	int numbytes,data_length;
 	char *a, *b, *c, *d, *e,*f;
+	flag = 0; 
 //	struct sockaddr_in their_addr; // connector's address information
 	int addr_len = sizeof (sender_addr);
 	strcpy(buf,"");
@@ -194,41 +201,53 @@ int udp_recv()
 		printf(" Error in receiving\n");
 		exit(-1);
 	}
-	printf("\n\n***********8Bytes Received: %d\n",numbytes);	
+	printf("\n\n***********Bytes Received: %d\n",numbytes);	
 //	printf("the received string is%s\n",buf);
-	buf[strlen(buf)] = '\0';
-	a = strtok(buf,"\n");
-	b = strtok(NULL,"\n");
-	c = strtok(NULL,"\n");
-	f = strtok(NULL,"\n"); //'f' contains the data_length passed from sender
+//	buf[strlen(buf)] = '\0';
+	a = strtok_r(buf,"\n",&d);
+	curr_pkt.seq_num = (uint32_t)atoi(a);
+
+	b = strtok_r(NULL,"\n",&d);
+	curr_pkt.checksum = (uint16_t)atoi(b);
+
+	c = strtok_r(NULL,"\n",&d);
+	curr_pkt.pkt_type = (uint16_t)atoi(c);
+
+	if((curr_pkt.data = malloc(strlen(d)*sizeof(char))) == NULL)
+	{
+		printf("Error allocating memory\n");
+		exit(-1);
+	}
+	sprintf(curr_pkt.data,"%s",d);
+	flag = 1;
+/*	f = strtok(NULL,"\n"); //'f' contains the data_length passed from sender
 	d = strtok(NULL,"\0"); //This is not allowed, since d is not a null terminated string now.
 //	strcat(d,'\0');
-	e = strtok(a,":");
-	e = strtok(NULL,":");
-	curr_pkt.seq_num = (uint32_t)atoi(e);
+//	e = strtok(a,":");
+//	e = strtok(NULL,":");
 	e = strtok(b,":");
 	e = strtok(NULL,":");
-	curr_pkt.checksum = (uint16_t)atoi(e);
 	e = strtok(c,":");
 	e = strtok(NULL,":");
-	curr_pkt.pkt_type = (uint16_t)atoi(e);
 	
 	e = strtok(f,":");
 	e = strtok(NULL,":");
 	data_length = (uint16_t)atoi(e);
 
 	fflush(stdout);
-	d[data_length] = '\0'; //delimit the data string	
+	d[data_length] = '\0'; //delimit the data string	*/
 
-//	printf("seq_num: %d, checksum %x, packet type %x\n data is %s data length is %d\n",curr_pkt.seq_num,curr_pkt.checksum,curr_pkt.pkt_type,d,(int)strlen(d));
-	if((curr_pkt.data = (char*)malloc(strlen(d)*sizeof(char)))==NULL)
+	printf("seq_num: %d, checksum: %x, packet type: %x\n",curr_pkt.seq_num,curr_pkt.checksum,curr_pkt.pkt_type);
+/*	if((curr_pkt.data = (char*)malloc(strlen(d)*sizeof(char)))==NULL)
 	{
 		perror("CANNOT ALLOCATE MEMORY :( For Curr Packet Data\n");
 		exit(1);
 	}
 	strcpy(curr_pkt.data,d);
-	strcat(curr_pkt.data,"\0");
-//	printf("Done with receive with data %s\n\n",curr_pkt.data);
+	strcat(curr_pkt.data,"\0");*/
+	printf("For received data.. length is %d\n data is %s\n",strlen(d),d);
+	printf("For copied data.. length is %d\n data is %s\n\n",strlen(curr_pkt.data),curr_pkt.data);
+	
 }
 
 
