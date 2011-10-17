@@ -11,8 +11,9 @@ typedef struct segment_t{
 	uint16_t checksum;
 	uint16_t pkt_type;
 	uint32_t seq_num;
-	char *data;
+	char data[MAXLEN];
 	int *ack;
+	int *retransmit;
 } segment;
 #pragma pack(0)
 

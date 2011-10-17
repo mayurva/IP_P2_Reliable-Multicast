@@ -25,7 +25,7 @@ host_info client_addr;
 host_info *server_addr;
 struct sockaddr_in sender_addr;
 
-int *retransmit; //stores index of receivers to whom segment has to be retransmitted
+//int *retransmit; //stores index of receivers to whom segment has to be retransmitted
 
 int oldest_unacked;   //denotes the no. of oldest unacknowledged segment in buffer
 int next_seq_num;     //to populate seq no. field in seg hdr 
@@ -72,14 +72,15 @@ char * read_file()
 
     for(j=0;j<mss;j++)
     {
-    if((fread(buff,sizeof(char),1,file))<0)
-{
-perror("\nRead error");
-exit(1);
-}
-temp_buf[j] = buff[0];
+    	if((fread(buff,sizeof(char),1,file))<0)
+	{
+		perror("\nRead error");
+		exit(1);
+	}
+	temp_buf[j] = buff[0];
    }
    temp_buf[j] = '\0';
+   printf("returning!\n");
    return temp_buf;
 }
 
@@ -207,19 +208,50 @@ void initialize_sender_buffer()
 }
 */
 
-int second_dup_ack()
+int second_dup_ack(int current,int *ret)
 {
+	int i,flag = 0;
+	for(i=0;i<no_of_receivers;i++){
+		if(send_buffer[current % n].ack[i] == 3)  //Second Duplicate, third overall
+			ret[i] = i;
+			flag =1;
+	}
+	return flag;
 }
 
-void update_retransmit_arr()
+void update_retransmit_arr(int current,int second_duplicates[])
 {
+	//do we Clear the retransmit array first?
+	int i;
+	for(i = 0;i < no_of_receivers; i++){
+		send_buffer[current % n].retransmit[i] = -1;
+	}
+	for(i = 0;i < no_of_receivers; i++){
+		if(second_duplicates[i] != -1){
+			send_buffer[current % n].retransmit[i] = second_duplicates[i];
+		}
+	}
+	//Updates the retransmit array
 }
 
-void update_ack_arr()
+void update_ack_arr(int current,char ack_from[16])
 {
+	int i;
+	if(current >= oldest_unacked)
+        {
+                for(i=0;i<no_of_receivers;i++)
+                {
+                        if(strcmp(server_addr[i].ip_addr,ack_from)==0)
+                        {
+                                send_buffer[(current)%n].ack[i]+=1;
+                                break;
+                        }
+
+                }
+        }
 }
 
-void wait_for_ack()
+uint32_t wait_for_ack(char *ack_from)
 {
 	
 	char buf[MAXLEN];
@@ -245,7 +277,7 @@ void wait_for_ack()
 		
 	recvd_seq_num = (uint32_t)atoi(a);
 
-	if(recvd_seq_num >= oldest_unacked)
+	/*if(recvd_seq_num >= oldest_unacked)
 	{
 		for(i=0;i<no_of_receivers;i++)
 		{
@@ -256,30 +288,38 @@ void wait_for_ack()
 			}
 			
 		}
-	}		
+	}*/
+	strcpy(ack_from,recv_addr);
+	return recvd_seq_num;		
 }
 
 void *recv_ack(void *ptr)
 {
-	int retval;
+	int retval,curr_seq_num,i;
+	
 	while(1)
 	{
-		wait_for_ack();
+		char ack_from[16] = {0};
+		curr_seq_num = wait_for_ack(ack_from);
 		
+		int second_duplicates[5]; //to retrieve the recvr indexes from ack array for current packet for which we have 2nd duplicates
+		for(i = 0;i< 5;i++) second_duplicates[i] = -1;
 		pthread_mutex_lock(&mutex_ack);
-			retval = second_dup_ack();
+			retval = second_dup_ack(curr_seq_num,second_duplicates);
 		pthread_mutex_unlock(&mutex_ack);
-			
+		
+		
 		if(retval == 1)
 		{
 			pthread_mutex_lock(&mutex_retransmit);
-				update_retransmit_arr();
+				update_retransmit_arr(curr_seq_num+1,second_duplicates); //do we need to have per packet retransmit array?.. also, we have to send 'FOLLOWING' packet. So what to send?
 			pthread_mutex_unlock(&mutex_retransmit);
 		}
 		else
 		{
+			//Update curr_seq_num's ack array at the correct index using the ack_from which has IP_Address of the current receiver
 			pthread_mutex_lock(&mutex_ack);
-				update_ack_arr();
+				update_ack_arr(curr_seq_num,ack_from);
 			pthread_mutex_unlock(&mutex_ack);
 		}
 	}
@@ -287,6 +327,12 @@ void *recv_ack(void *ptr)
 
 void * timeout_process(void *ptr)
 {
+	//Wait for timer to timeout.
+	//is_ack_received_from_all() - (With ACK Mutex)
+		//exit
+	//Else, find retransmission array, - (With RETRANSMIT Mutex)
+		//exit
+
 
 }
 
@@ -314,15 +360,17 @@ void * rdt_send(void *ptr)
 {
 	int i,j;
 	pthread_t timer_thread;
+	//printf("In RDT_SEND!\n");
 	while(1)
 	{
 		if(is_buffer_avail())	
 		{
-			strcpy(send_buffer[next_seq_num].data, read_file()); //copy 1 segment data into sender buffer
+			//printf("Buffer Available: Getting 1 MSS from File!\n");
+			printf("Next is: %d",next_seq_num);
+			strcpy(send_buffer[next_seq_num].data,read_file()); //copy 1 segment data into sender buffer
+			printf("Data got: %s\n",send_buffer[next_seq_num].data);
                 	send_buffer[next_seq_num].data[strlen(send_buffer[next_seq_num].data)] = '\0';
-			//read_file();
 			create_segment(next_seq_num);
-			
 			for(j=0;j<no_of_receivers;j++)
 				udt_send(next_seq_num,j);
 
@@ -334,12 +382,14 @@ void * rdt_send(void *ptr)
 		pthread_mutex_lock(&mutex_retransmit);
 			for(i=0;i<no_of_receivers;i++)
 			{
-				if(retransmit[i] == 1)
+				if(send_buffer[oldest_unacked % n].retransmit[i] == 1)
 				{
-					retransmit[i]=0;
+					send_buffer[oldest_unacked %n].retransmit[i]=0;
 					udt_send(oldest_unacked,i);
+					
 				}
 			}
+			//Timer for Oldest Unacked
 		pthread_mutex_unlock(&mutex_retransmit);
 	}
 }
@@ -396,16 +446,44 @@ int init_sender(int argc,char *argv[])
 
 //	initialize_sender_buffer();	
 
+	printf("Initializing Send Buffer! \n");
 	send_buffer = (segment *)malloc(n*sizeof(segment)); //allocate space for sender buffer 
-	retransmit = (int *)malloc(no_of_receivers*sizeof(int));	
 	
-	for(i=0;i<no_of_receivers;i++)
-		retransmit[i]=0;
-
-	pthread_create(&sender_thread,NULL,rdt_send,NULL);
+	printf("Initializing Retransmit Array! \n");
+	//retransmit = (int *)malloc(no_of_receivers*sizeof(int));	
+	
+	int j;
+	for(i=0;i<n;i++){
+		send_buffer[i].retransmit = (int *)malloc(no_of_receivers*sizeof(int));
+		for(j=0;j<no_of_receivers;j++){
+					send_buffer[i].retransmit[j]=-1;
+		}
+	}
+	if(pthread_create(&sender_thread,NULL,rdt_send,NULL)!=0){
+		perror("Cannot create sender_thread!\n");
+		exit(1);
+	}
 //	pthread_create(&timer_thread,NULL,timeout_process,NULL);
-	pthread_create(&recv_thread,NULL,recv_ack,NULL);
+	if(pthread_create(&recv_thread,NULL,recv_ack,NULL)!=0){
+		perror("Cannot create recv_thread!\n");
+		exit(1);
+	}
 
+	//We will have to join here right??
+	if(pthread_join(sender_thread,NULL)!=0)
+	{
+		perror("Cannot Join sender_thread!\n");
+		exit(1);
+	}
+
+	if(pthread_join(recv_thread,NULL)!=0)
+        {
+                perror("Cannot Join recv_thread!\n");
+		exit(1);
+        }
+
+
+	
 	
 }
 
