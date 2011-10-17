@@ -8,6 +8,7 @@ typedef struct segment_t{
         uint32_t seq_num;
         uint16_t checksum;
         uint16_t pkt_type;
+	char arrived;
         char *data;
 } segment;
 

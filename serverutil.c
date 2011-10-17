@@ -162,7 +162,12 @@ int compare_checksum(uint16_t checksum)
 int add_to_buffer(int index)
 {
         printf("Index is %d\n",index);
+	
+	
         recv_buffer[index].seq_num = curr_pkt.seq_num;
+
+	//ARRIVED INDICATES current packet is arrived
+	recv_buffer[index].arrived = TRUE;
 
         if((recv_buffer[index].data = (char*)malloc(strlen(curr_pkt.data)*sizeof(char)))==NULL){
                 perror("CANNOT ALLOCATE MEMORY :( : Add to Buffer \n");
@@ -171,7 +176,7 @@ int add_to_buffer(int index)
         strcpy(recv_buffer[index].data,curr_pkt.data);
         //strcat(recv_buffer[index].data,"\0"); 
 
-        printf("Length of CURRPKT DATA: %d\n",strlen(curr_pkt.data));
+        printf("Length of CURRPKT DATA: %d\n",(int)strlen(curr_pkt.data));
 	curr_pkt_seq_num = curr_pkt.seq_num;
 	if(flag)
 	{
@@ -245,14 +250,24 @@ int udp_recv()
 	}
 	strcpy(curr_pkt.data,d);
 	strcat(curr_pkt.data,"\0");*/
-	printf("For received data.. length is %d\n data is %s\n",strlen(d),d);
-	printf("For copied data.. length is %d\n data is %s\n\n",strlen(curr_pkt.data),curr_pkt.data);
+	printf("For received data.. length is %d\n data is %s\n",(int)strlen(d),d);
+	printf("For copied data.. length is %d\n data is %s\n\n",(int)strlen(curr_pkt.data),curr_pkt.data);
 	
 }
 
 
-int is_in_sequence()
+int is_next_expected()
 {
+	if(curr_pkt.seq_num == next_seg_seq_num) //In Sequence TRUE
+		return TRUE;
+	else
+		return FALSE;
+}
+
+int is_gap_filled()
+{
+	if(recv_buffer[(curr_pkt.seq_num%n)-1].seq_num == curr_pkt.seq_num-1 && recv_buffer[(curr_pkt.seq_num%n)+1].seq_num == curr_pkt.seq_num+1)
+		return TRUE;
 	return FALSE;
 }
 
@@ -272,7 +287,7 @@ int write_file(char *temp_buf)
 {
     	int j=0,numbytes;
 	char buff[1];
-	printf("\nWritten! %d bytes",strlen(temp_buf));
+	printf("\nWritten! %d bytes",(int)strlen(temp_buf));
 	if((numbytes=fwrite(temp_buf,strlen(temp_buf),1,file))<0)
 	{
 		perror("\nWrite error");
@@ -283,33 +298,72 @@ int write_file(char *temp_buf)
 
 int process_pkt()
 {
+	if(is_next_expected()){
+		return 1; //
+	}
+	else{  //Curr Pkt is not in sequence
+		if((is_gap_filled() && !is_next_expected()) || (!is_gap_filled() && !is_next_expected())) //Gap is filled but the packet is out of sequence
+		{
+			//Buffer the curr_pkt
+			return 2;
+			
+		}
+	}
+	return 0;
        // while (is_in_sequence())
 		//printf("Received packet is:\nSeq Number:%d\nChecksum:%d\npacket Type:%d\ndata: %s\n",curr_pkt.seq_num,curr_pkt.checksum,curr_pkt.pkt_type,curr_pkt.data);
                 //write_file();
 }
 
+void slide_window()
+{
+	next_seg_seq_num++;
+}
+
 int recv_data()
 {
-        int ret_val;
+        int ret_val,process_ret;
         uint16_t recv_checksum;
+
+
+		//Got a new packet
 	udp_recv();
+
 	recv_checksum = compute_checksum(curr_pkt.data);
         if(!(compare_checksum(recv_checksum)))
 	{
 		printf("Checksum mismatch\n");
-                return FALSE;
+                return FALSE; //Discard and no ACK Sent
 	}
 
 
+	ret_val = is_in_recv_window();
+        if(ret_val == -1)
+                return TRUE;
+        else if(ret_val == 0)
+                return FALSE;
+
+	process_ret = process_pkt();
+	if(process_ret == 1) //Add to Buffer, slide the window, send ACK
+	{
+		add_to_buffer(ret_val-1);
+	
+		int i =0;	
+		for(i = 0;recv_buffer[i].arrived == TRUE;i++){
+			slide_window();
+			recv_buffer[i].arrived = FALSE;
+			//FLUSH i'th index in recv_buffer
+		}
+		//send ACK for curr_pkt.seq_num
+	}
+	else if(process_ret == 2) //Add to Buffer, send ACK for most recent in-sequence packet
+	{
+		add_to_buffer(ret_val-1);
+		//send ACK for most in-sequence packet ... next_seg_seq_num
+	}
+
 	//Write this 1 MSS to file
 	write_file(curr_pkt.data);
-	ret_val = is_in_recv_window();
-	if(ret_val == -1)
-		return TRUE;
-	else if(ret_val == 0)
-		return FALSE;
-	add_to_buffer(ret_val-1);
-        process_pkt();
         return TRUE;
 }
 
