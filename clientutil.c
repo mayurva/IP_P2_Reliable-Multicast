@@ -318,7 +318,9 @@ void * rdt_send(void *ptr)
 	{
 		if(is_buffer_avail())	
 		{
-			read_file();
+			strcpy(send_buffer[next_seq_num].data, read_file()); //copy 1 segment data into sender buffer
+                	send_buffer[next_seq_num].data[strlen(send_buffer[next_seq_num].data)] = '\0';
+			//read_file();
 			create_segment(next_seq_num);
 			
 			for(j=0;j<no_of_receivers;j++)
