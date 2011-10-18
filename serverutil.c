@@ -121,7 +121,7 @@ int udt_send(int seg_index)
 	//Right now overrighting the recv_buffer's pkt_type to indicate that it is now an ACK Packet (Logically) ..
 
 	recv_buffer[seg_index].pkt_type = 0xAAAA;  //indicates ACK packet - 1010101010101010
-        sprintf(buf,"Seq Number:%d\nChecksum:%d\npacket Type:%d\n",recv_buffer[seg_index].seq_num,recv_buffer[seg_index].checksum,recv_buffer[seg_index].pkt_type);
+        sprintf(buf,"%d\n%d\n%d\n",recv_buffer[seg_index].seq_num,0,recv_buffer[seg_index].pkt_type);
         
 
 	//socket to send

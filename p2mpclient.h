@@ -3,6 +3,9 @@
 
 #define MAX_SEQ 4294967295
 #define MAXLEN 5000
+
+#define TRUE 1
+#define FALSE 0
 #pragma pack(1)
 typedef struct segment_t{
 	uint16_t checksum;

@@ -11,7 +11,7 @@
 #include <netinet/in.h>
 #include <ifaddrs.h>
 #include <net/if.h>
-
+#include <pthread.h>
 #include"p2mpclient.h"
 
 int n;
@@ -23,6 +23,15 @@ int no_of_receivers;
 int soc;
 host_info client_addr;
 host_info *server_addr;
+struct sockaddr_in sender_addr;
+
+int *retransmit; //stores index of receivers to whom segment has to be retransmitted
+
+int oldest_unacked;   //denotes the no. of oldest unacknowledged segment in buffer
+int next_seq_num;     //to populate seq no. field in seg hdr 
+
+pthread_mutex_t mutex_retransmit = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutex_ack = PTHREAD_MUTEX_INITIALIZER;
 
 int udt_send(int seg_index,int server_index)
 {
@@ -45,7 +54,7 @@ int udt_send(int seg_index,int server_index)
 //	printf("\n\nData length = %d",(int)strlen(send_buffer[seg_index].data));
 	sprintf(buf,"%u\n%u\n%u\n%s",send_buffer[seg_index].seq_num,send_buffer[seg_index].checksum,send_buffer[seg_index].pkt_type,send_buffer[seg_index].data);
 	len = strlen(buf);
-	printf("\n\n***********Bytes Sent: %d\ndata length is %d",len,strlen(send_buffer[seg_index].data));
+	printf("\n\n***********Bytes Sent: %d\ndata length is %d",len,(int)strlen(send_buffer[seg_index].data));
 	if (sendto(soc,buf, len, 0, (struct sockaddr *)&their_addr, sizeof (their_addr)) == -1) {
        		printf("Error in sending");
        		exit(-1);
@@ -76,68 +85,44 @@ temp_buf[j] = buff[0];
 
 uint16_t create_checksum(char *data)
 {
-uint16_t padd=0; //in case data has odd no. of octets
-uint16_t word16; //stores 16 bit words out of adjacent 8 bits
-uint32_t sum;
-int i;
+	uint16_t padd=0; //in case data has odd no. of octets
+	uint16_t word16; //stores 16 bit words out of adjacent 8 bits
+	uint32_t sum;
+	int i;
 
-int len_udp = strlen(data)+strlen(data)%2; //no. of octets
-//uint16_t *buff = (uint16_t *)malloc(len_udp * sizeof(uint16_t));
-//char padding;
+	int len_udp = strlen(data)+strlen(data)%2; //no. of octets
+	sum=0;
 
-//if(len_udp%2 == 0) //padding = 1 if even no. of octets
-//padding = 1;
+	// make 16 bit words out of every two adjacent 8 bit words and
+	// calculate the sum of all 16 bit words
 
-// Find out if the length of data is even or odd number. If odd,
-// add a padding byte = 0 at the end of packet
-//if (padding&1==1){
-//padd=1;
-//buff[len_udp]=0; //len_udp is no. of octets
-//}
+	for (i=0; i<len_udp; i=i+2) 
+	{
+		word16 =((data[i]<<8)&0xFF00)+(data[i+1]&0xFF);
+		sum = sum + (unsigned long)word16;
+	}
 
-//initialize sum to zero
-sum=0;
+	// keep only the last 16 bits of the 32 bit calculated sum and add the carries
+	while (sum>>16) 
+		sum = (sum & 0xFFFF)+(sum >> 16);
 
-// make 16 bit words out of every two adjacent 8 bit words and
-// calculate the sum of all 16 bit words
+	// Take the one's complement of sum
+	sum = ~sum;
 
-for (i=0; i<len_udp; i=i+2) 
-{
-	word16 =((data[i]<<8)&0xFF00)+(data[i+1]&0xFF);
-	sum = sum + (unsigned long)word16;
-}
-
-/* // add the UDP pseudo header which contains the IP source and destinationn addresses
-for (i=0;i<4;i=i+2){
-word16 =((src_addr[i]<<8)&0xFF00)+(src_addr[i+1]&0xFF);
-sum=sum+word16;
-}
-for (i=0;i<4;i=i+2){
-word16 =((dest_addr[i]<<8)&0xFF00)+(dest_addr[i+1]&0xFF);
-sum=sum+word16;
-}
-// the protocol number and the length of the UDP packet
-sum = sum + prot_udp + len_udp;
-*/
-// keep only the last 16 bits of the 32 bit calculated sum and add the carries
-     while (sum>>16) 
-sum = (sum & 0xFFFF)+(sum >> 16);
-
-// Take the one's complement of sum
-sum = ~sum;
-
-printf("Checksum is %x\n",(uint16_t)sum);
-return ((uint16_t) sum);
+	printf("Checksum is %x\n",(uint16_t)sum);
+	return ((uint16_t) sum);
 }
 
 // appends header to payload
-void create_segments(uint32_t seg_num)
+void create_segment(uint32_t seg_num)
 {
-	send_buffer[seg_num].seq_num = seg_num%MAX_SEQ;
-	send_buffer[seg_num].pkt_type = 0x5555; //indicates data packet - 0101010101010101
-	send_buffer[seg_num].checksum = create_checksum(send_buffer[seg_num].data);
-	send_buffer[seg_num].ack = NULL;
-
+	int i;
+	send_buffer[(seg_num)%n].seq_num = seg_num;
+	send_buffer[(seg_num)%n].pkt_type = 0x5555; //indicates data packet - 0101010101010101
+	send_buffer[(seg_num)%n].checksum = create_checksum(send_buffer[(seg_num)%n].data);
+	send_buffer[(seg_num)%n].ack = (int *)malloc(no_of_receivers*sizeof(int));
+	for(i=0;i<no_of_receivers;i++)
+		send_buffer[seg_num%n].ack[i] = 0;
 }
 
 void populate_public_ip()
@@ -205,55 +190,169 @@ void populate_public_ip()
 }
 
 
-
+/*
 void initialize_sender_buffer()
 {
 	int i=0;
 	send_buffer = (segment *)malloc(n*sizeof(segment));
 	for(i=0;i<n;i++){
-		send_buffer[i].data = (char *)malloc(mss*sizeof(char));
-		strcpy(send_buffer[i].data, read_file()); //copy 1 segment data into sender buffer
-		send_buffer[i].data[strlen(send_buffer[i].data)] = '\0';
-		create_segments((uint32_t) i);
+		//send_buffer[i].data = (char *)malloc(mss*sizeof(char));
+		//strcpy(send_buffer[i].data, read_file()); //copy 1 segment data into sender buffer
+		//send_buffer[i].data[strlen(send_buffer[i].data)] = '\0';
+		//create_segments((uint32_t) i);
+		
+		send_buffer[i].seq_num = - 1;
 	}
 	printf("iterated %d times\n",i);
 }
-/*int populate_server_ip(int argc)
+*/
+
+int second_dup_ack()
+{
+}
+
+void update_retransmit_arr()
+{
+}
+
+void update_ack_arr()
+{
+}
+
+void wait_for_ack()
+{
+	
+	char buf[MAXLEN];
+        int numbytes,i;
+
+	char *a;
+	uint32_t recvd_seq_num;
+
+	char recv_addr[16] = {0}; //to store IP address of receiver from data from socket 
+	
+        int addr_len = sizeof (sender_addr);
+        strcpy(buf,"");
+
+	numbytes=recvfrom(soc, buf, MAXLEN , 0,(struct sockaddr *)&sender_addr, &addr_len);
+        if(numbytes == -1) {
+                printf(" Error in receiving\n");
+                exit(-1);
+        }
+	
+	inet_ntop(AF_INET, &sender_addr.sin_addr.s_addr, recv_addr, sizeof recv_addr); //extract IP address from sender_addr
+
+	a=strtok(buf,"\n");
+		
+	recvd_seq_num = (uint32_t)atoi(a);
+
+	if(recvd_seq_num >= oldest_unacked)
+	{
+		for(i=0;i<no_of_receivers;i++)
+		{
+			if(strcmp(server_addr[i].ip_addr,recv_addr)==0)
+			{
+				send_buffer[(recvd_seq_num)%n].ack[i]+=1;
+				break;
+			}
+			
+		}
+	}		
+}
+
+void *recv_ack(void *ptr)
+{
+	int retval;
+	while(1)
+	{
+		wait_for_ack();
+		
+		pthread_mutex_lock(&mutex_ack);
+			retval = second_dup_ack();
+		pthread_mutex_unlock(&mutex_ack);
+			
+		if(retval == 1)
+		{
+			pthread_mutex_lock(&mutex_retransmit);
+				update_retransmit_arr();
+			pthread_mutex_unlock(&mutex_retransmit);
+		}
+		else
+		{
+			pthread_mutex_lock(&mutex_ack);
+				update_ack_arr();
+			pthread_mutex_unlock(&mutex_ack);
+		}
+	}
+}
+
+void * timeout_process(void *ptr)
 {
 
+}
 
-    char buf[100];
-    int soc;
-    struct sockaddr_in their_addr,recv_addr; // connector's address information
-    struct hostent *he;
-    int numbytes;
-    int addr_len;
-    
-    if ((he=gethostbyname("192.168.4.4")) == NULL) {  // get the host info
-        printf("\nHost not found");
-        exit(-1);
-    }
+void start_timer_thread(pthread_t timer_thread)
+{
+	pthread_create(&timer_thread,NULL,timeout_process,NULL);
 
-    
+}
 
-    their_addr.sin_family = AF_INET;     // host byte order
-    their_addr.sin_port = htons(1234); // short, network byte order
-    their_addr.sin_addr = *((struct in_addr *)he->h_addr);
-      
-    do
+int is_buffer_avail()
+{
+	if(next_seq_num-oldest_unacked<n)
+		return TRUE;
+	return FALSE;
+}
+
+int is_pkt_earliest_transmitted()
+{
+	if(oldest_unacked == next_seq_num)
+		return TRUE;
+	return FALSE;
+}
+
+void * rdt_send(void *ptr)
+{
+	int i,j;
+	pthread_t timer_thread;
+	while(1)
 	{
-		printf("\nEnter string to be transmitted: ");
-		gets(buf);
-		if (sendto(soc,buf,strlen(buf), 0,(struct sockaddr *)&their_addr, sizeof (their_addr)) == -1) {
-        		printf("Error in sending");
-        		exit(-1);
-		}	
+		if(is_buffer_avail())	
+		{
+			read_file();
+			create_segment(next_seq_num);
+			
+			for(j=0;j<no_of_receivers;j++)
+				udt_send(next_seq_num,j);
 
-}*/
+			if(is_pkt_earliest_transmitted())
+				start_timer_thread(timer_thread);
+
+			next_seq_num=(next_seq_num+1)%MAX_SEQ;
+		}		
+		pthread_mutex_lock(&mutex_retransmit);
+			for(i=0;i<no_of_receivers;i++)
+			{
+				if(retransmit[i] == 1)
+				{
+					retransmit[i]=0;
+					udt_send(oldest_unacked,i);
+				}
+			}
+		pthread_mutex_unlock(&mutex_retransmit);
+	}
+}
 
 int init_sender(int argc,char *argv[])
 {
 	int i;
+
+	oldest_unacked = 0;
+	next_seq_num = 0;
+	
+	pthread_t sender_thread;
+//	pthread_t timer_thread;
+	pthread_t recv_thread;
+
 	if(argc==1)
 	{
 		printf("Incorrect command line agruments\n");
@@ -277,6 +376,7 @@ int init_sender(int argc,char *argv[])
 	
 	no_of_receivers = argc - 5;
 	server_addr = (host_info*)malloc(sizeof(host_info)*(no_of_receivers));	
+	
 	for(i=argc-5;i>=1;i--){
 		strcpy(server_addr[i-1].ip_addr,argv[i]);
 	}
@@ -292,20 +392,20 @@ int init_sender(int argc,char *argv[])
         	exit(-1);
 	}
 
-	initialize_sender_buffer();	
+//	initialize_sender_buffer();	
+
+	send_buffer = (segment *)malloc(n*sizeof(segment)); //allocate space for sender buffer 
+	retransmit = (int *)malloc(no_of_receivers*sizeof(int));	
+	
+	for(i=0;i<no_of_receivers;i++)
+		retransmit[i]=0;
+
+	pthread_create(&sender_thread,NULL,rdt_send,NULL);
+//	pthread_create(&timer_thread,NULL,timeout_process,NULL);
+	pthread_create(&recv_thread,NULL,recv_ack,NULL);
+
+	
 }
-
-// divide segment's data into 2 byte words
-uint16_t split_buffer(char *data)
-{
-
-}
-
-
-
-
-
-//When the protocol starts, need to initialize sender buffer with N segments
 
 
 void print_segments()
@@ -319,13 +419,3 @@ i++;
 printf("\nDone !!\n");
 }
 
-void rdt_send()
-{
-	int i,j;
-// read_file();
-// create_segments();
-	print_segments();
-	for(i=0;i<n;i++)
-		for(j=0;j<no_of_receivers;j++)
-			udt_send(i,j);
-}

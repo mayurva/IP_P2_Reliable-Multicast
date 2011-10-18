@@ -9,7 +9,6 @@
 int main(int argc, char *argv[])
 {
 	init_sender(argc,argv);
-//	initialize_sender_buffer();
 	rdt_send();
 }
 	
