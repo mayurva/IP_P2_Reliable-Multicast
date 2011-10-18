@@ -3,14 +3,15 @@
 #define MAXLEN 5000
 #define FALSE 0
 #define TRUE 1
-
+#pragma pack(1)
 typedef struct segment_t{
         uint32_t seq_num;
         uint16_t checksum;
         uint16_t pkt_type;
 	char arrived;
-        char *data;
+        char data[MAXLEN];
 } segment;
+#pragma pack(0)
 
 extern segment *recv_buffer;
 extern uint32_t next_seg_seq_num;

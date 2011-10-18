@@ -3,14 +3,15 @@
 
 #define MAX_SEQ 4294967295
 #define MAXLEN 5000
+#pragma pack(1)
 typedef struct segment_t{
-	uint32_t seq_num;
 	uint16_t checksum;
 	uint16_t pkt_type;
+	uint32_t seq_num;
 	char *data;
 	int *ack;
 } segment;
-
+#pragma pack(0)
 
 typedef struct host_info_t{
 //      int portnum;

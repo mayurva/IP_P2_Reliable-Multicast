@@ -169,21 +169,21 @@ int add_to_buffer(int index)
 	//ARRIVED INDICATES current packet is arrived
 	recv_buffer[index].arrived = TRUE;
 
-        if((recv_buffer[index].data = (char*)malloc(strlen(curr_pkt.data)*sizeof(char)))==NULL){
+/*        if((recv_buffer[index].data = (char*)malloc(strlen(curr_pkt.data)*sizeof(char)))==NULL){
                 perror("CANNOT ALLOCATE MEMORY :( : Add to Buffer \n");
                 exit(1);
-        }
+        }*/
         strcpy(recv_buffer[index].data,curr_pkt.data);
         //strcat(recv_buffer[index].data,"\0"); 
 
-        printf("Length of CURRPKT DATA: %d\n",(int)strlen(curr_pkt.data));
+        printf("Length of data in packet with seq_num=%d DATA: %d\n",curr_pkt.seq_num,(int)strlen(curr_pkt.data));
 	curr_pkt_seq_num = curr_pkt.seq_num;
 	if(flag)
 	{
-	        free(curr_pkt.data);
+	        //free(curr_pkt.data);
 		curr_pkt.data == NULL;
 		flag = 0;
-		printf("freed!!!\n");
+		//printf("freed!!!\n");
 	}
         return TRUE;
 }
@@ -218,11 +218,11 @@ int udp_recv()
 	c = strtok_r(NULL,"\n",&d);
 	curr_pkt.pkt_type = (uint16_t)atoi(c);
 
-	if((curr_pkt.data = malloc(strlen(d)*sizeof(char))) == NULL)
+/*	if((curr_pkt.data = malloc(strlen(d)*sizeof(char))) == NULL)
 	{
 		printf("Error allocating memory\n");
 		exit(-1);
-	}
+	}*/
 	strcpy(curr_pkt.data,d);
 	flag = 1;
 /*	f = strtok(NULL,"\n"); //'f' contains the data_length passed from sender
@@ -252,7 +252,7 @@ int udp_recv()
 	strcat(curr_pkt.data,"\0");*/
 	printf("For received data.. length is %d\n data is %s\n",(int)strlen(d),d);
 	printf("For copied data.. length is %d\n data is %s\n\n",(int)strlen(curr_pkt.data),curr_pkt.data);
-	
+	strcpy(d,"");	
 }
 
 
@@ -330,7 +330,7 @@ int recv_data()
 	udp_recv();
 
 	recv_checksum = compute_checksum(curr_pkt.data);
-        if(!(compare_checksum(recv_checksum)))
+	if(!(compare_checksum(recv_checksum)))
 	{
 		printf("Checksum mismatch\n");
                 return FALSE; //Discard and no ACK Sent
@@ -353,7 +353,7 @@ int recv_data()
 			slide_window();
 			recv_buffer[i].arrived = FALSE;
 			//FLUSH i'th index in recv_buffer
-		}
+	}
 		//send ACK for curr_pkt.seq_num
 	}
 	else if(process_ret == 2) //Add to Buffer, send ACK for most recent in-sequence packet

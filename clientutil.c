@@ -43,9 +43,9 @@ int udt_send(int seg_index,int server_index)
 	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
 	strcpy(buf,"");
 //	printf("\n\nData length = %d",(int)strlen(send_buffer[seg_index].data));
-	sprintf(buf,"%d\n%d\n%d\n%s",send_buffer[seg_index].seq_num,send_buffer[seg_index].checksum,send_buffer[seg_index].pkt_type,send_buffer[seg_index].data);
+	sprintf(buf,"%u\n%u\n%u\n%s",send_buffer[seg_index].seq_num,send_buffer[seg_index].checksum,send_buffer[seg_index].pkt_type,send_buffer[seg_index].data);
 	len = strlen(buf);
-	printf("\n\n***********Bytes Sent: %d",len);
+	printf("\n\n***********Bytes Sent: %d\ndata length is %d",len,strlen(send_buffer[seg_index].data));
 	if (sendto(soc,buf, len, 0, (struct sockaddr *)&their_addr, sizeof (their_addr)) == -1) {
        		printf("Error in sending");
        		exit(-1);
@@ -100,7 +100,8 @@ sum=0;
 
 // make 16 bit words out of every two adjacent 8 bit words and
 // calculate the sum of all 16 bit words
-for (i=0; i<len_udp; i=i+2)
+
+for (i=0; i<len_udp; i=i+2) 
 {
 	word16 =((data[i]<<8)&0xFF00)+(data[i+1]&0xFF);
 	sum = sum + (unsigned long)word16;
@@ -119,7 +120,7 @@ sum=sum+word16;
 sum = sum + prot_udp + len_udp;
 */
 // keep only the last 16 bits of the 32 bit calculated sum and add the carries
-     while (sum>>16)
+     while (sum>>16) 
 sum = (sum & 0xFFFF)+(sum >> 16);
 
 // Take the one's complement of sum
