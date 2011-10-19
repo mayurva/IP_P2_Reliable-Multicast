@@ -32,28 +32,28 @@ struct sockaddr_in sender_addr;
 uint16_t compute_checksum(char *data)
 {
 	uint16_t padd=0; //in case data has odd no. of octets
-uint16_t word16; //stores 16 bit words out of adjacent 8 bits
-uint32_t sum;
-int i;
+	uint16_t word16; //stores 16 bit words out of adjacent 8 bits
+	uint32_t sum;
+	int i;
 
-int len_udp = strlen(data)+strlen(data)%2; //no. of octets
-sum=0;
+	int len_udp = strlen(data)+strlen(data)%2; //no. of octets
+	sum=0;
 
-for (i=0; i<len_udp; i=i+2)
-{
-        word16 =((data[i]<<8)&0xFF00)+(data[i+1]&0xFF);
-        sum = sum + (unsigned long)word16;
-}
+	for (i=0; i<len_udp; i=i+2)
+	{
+        	word16 =((data[i]<<8)&0xFF00)+(data[i+1]&0xFF);
+	        sum = sum + (unsigned long)word16;
+	}
 
-// keep only the last 16 bits of the 32 bit calculated sum and add the carries
-     while (sum>>16)
-sum = (sum & 0xFFFF)+(sum >> 16);
+	// keep only the last 16 bits of the 32 bit calculated sum and add the carries
+	while (sum>>16)
+	sum = (sum & 0xFFFF)+(sum >> 16);
 
-// Take the one's complement of sum
-sum = ~sum;
+	// Take the one's complement of sum
+	sum = ~sum;
 
-printf("Checksum is %x\n",(uint16_t)sum);
-return ((uint16_t) sum);
+	printf("Checksum is %x\n",(uint16_t)sum);
+	return ((uint16_t) sum);
 
 }
 
@@ -62,7 +62,7 @@ int init_recv_window()
 	recv_buffer = (segment*)malloc(n*sizeof(segment));
 	printf("Allocated %d segments of Total length: %d\n",n,(int)(n*sizeof(segment)));
 	next_seg_seq_num = 0;	
-	buf_counter = 0;
+	buf_counter = 0; //not used`
 }
 
 int init_receiver(int argc, char *argv[])
@@ -91,7 +91,7 @@ int init_receiver(int argc, char *argv[])
 	}
 
 	my_addr.sin_family = AF_INET;         // host byte order
-	my_addr.sin_port = htons(server_port);     // short, network byte order
+	my_addr.sin_port = htons(server_port);// short, network byte order
 	my_addr.sin_addr.s_addr = INADDR_ANY; // automatically fill with my IP
 	memset(my_addr.sin_zero, '\0', sizeof my_addr.sin_zero);
 
@@ -101,9 +101,8 @@ int init_receiver(int argc, char *argv[])
 	}
 	
 	init_recv_window();
-	last_packet = 1;
+	last_packet = 1; //not used
 }
-
 
 
 int udt_send(int seg_index)
@@ -123,17 +122,18 @@ int udt_send(int seg_index)
 	recv_buffer[seg_index].pkt_type = 0xAAAA;  //indicates ACK packet - 1010101010101010
         sprintf(buf,"%d\n%d\n%d\n",recv_buffer[seg_index].seq_num,0,recv_buffer[seg_index].pkt_type);
         
-
+/*
 	//socket to send
         if ((send_soc = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
                 printf("Error creating socket\n");
                 exit(-1);
         }
-
+*/
 
         len = strlen(buf);
         printf("\n\n***********ACK Bytes Sent: %d",len);
-        if (sendto(send_soc,buf, len, 0, (struct sockaddr *)&sender_addr, sizeof (sender_addr)) == -1) {
+//      if (sendto(send_soc,buf, len, 0, (struct sockaddr *)&sender_addr, sizeof (sender_addr)) == -1) {
+	if (sendto(soc,buf, len, 0, (struct sockaddr *)&sender_addr, sizeof (sender_addr)) == -1) {
                 printf("Error in sending");
                 exit(-1);
         }
@@ -141,11 +141,10 @@ int udt_send(int seg_index)
 }
 
 
-
 //Sending ack for the curr_pkt_seq_num  (wrapped around to get correct 'recv_buffer' index)  MSS in 'recv_buffer'
-int send_ack()
+int send_ack(int seg_index)
 {
-		int index = curr_pkt_seq_num%n;
+		int index = seg_index%n;
 		printf("\nSent ACK For Index: %d",index);
 		udt_send(index);
 
@@ -188,11 +187,7 @@ int add_to_buffer(int index)
         return TRUE;
 }
 
-
-
-
-
-int udp_recv()
+int udt_recv()
 {
 	char buf[MAXLEN];
 	int numbytes,data_length;
@@ -280,8 +275,6 @@ int is_in_recv_window()
 	return 0;
 }
 
-
-
 //writing 1 MSS Data into file .. called after checksum comparison
 int write_file(char *temp_buf)
 {
@@ -325,9 +318,8 @@ int recv_data()
         int ret_val,process_ret;
         uint16_t recv_checksum;
 
-
-		//Got a new packet
-	udp_recv();
+	//Got a new packet
+	udt_recv();
 
 	recv_checksum = compute_checksum(curr_pkt.data);
 	if(!(compare_checksum(recv_checksum)))
@@ -335,7 +327,6 @@ int recv_data()
 		printf("Checksum mismatch\n");
                 return FALSE; //Discard and no ACK Sent
 	}
-
 
 	ret_val = is_in_recv_window();
         if(ret_val == -1)
@@ -348,22 +339,26 @@ int recv_data()
 	{
 		add_to_buffer(ret_val-1);
 	
-		int i =0;	
-		for(i = 0;recv_buffer[i].arrived == TRUE;i++){
+		int i;	
+		for(i = next_seg_seq_num%n;recv_buffer[i].arrived == TRUE;i=(i+1)%n){
 			slide_window();
+			write_file(recv_buffer[i].data); //when the window slides, write the corresponding segment to file
 			recv_buffer[i].arrived = FALSE;
 			//FLUSH i'th index in recv_buffer
-	}
+		}
 		//send ACK for curr_pkt.seq_num
+		send_ack(next_seg_seq_num-1);
+		
 	}
 	else if(process_ret == 2) //Add to Buffer, send ACK for most recent in-sequence packet
 	{
 		add_to_buffer(ret_val-1);
 		//send ACK for most in-sequence packet ... next_seg_seq_num
+		send_ack(next_seg_seq_num-1);
 	}
 
 	//Write this 1 MSS to file
-	write_file(curr_pkt.data);
+//	write_file(curr_pkt.data);
         return TRUE;
 }
 
