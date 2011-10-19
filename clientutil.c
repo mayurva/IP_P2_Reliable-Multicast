@@ -245,10 +245,11 @@ int second_dup_ack(int current,int *ret)
 
 int update_ack_arr(int recvd_seq_num)
 {
-	int i;
+	int i,j;
 	int is_sec_dup_ack = FALSE;
 	if(recvd_seq_num >= oldest_unacked)
 	{
+		printf("Updating ack array\n");
 		for(i=0;i<no_of_receivers;i++)
 		{
 			if(strcmp(server_addr[i].ip_addr,recv_addr.ip_addr)==0)
@@ -257,6 +258,7 @@ int update_ack_arr(int recvd_seq_num)
 				if(send_buffer[(recvd_seq_num)%n].ack[i] >=3) //this is the second dup ack
 				{
 					send_buffer[(recvd_seq_num)%n].ack[i]=1; //reset the counter 
+					printf("This is second duplicate ack\n");
 					is_sec_dup_ack = TRUE;
 				}
 				break;
@@ -280,10 +282,11 @@ uint32_t wait_for_ack()
 	
         int addr_len = sizeof (sender_addr);
         strcpy(buf,"");
+	printf("Waiting for ack\n");
 
 	numbytes=recvfrom(soc, buf, MAXLEN , 0,(struct sockaddr *)&sender_addr, &addr_len);
         if(numbytes == -1) {
-                printf(" Error in receiving\n");
+                printf("Error in receiving\n");
                 exit(-1);
         }
 	
@@ -293,7 +296,7 @@ uint32_t wait_for_ack()
 		
 	recvd_seq_num = (uint32_t)atoi(a);
 	strcpy(recv_addr.ip_addr,recv_addr_arr);
-
+	printf("Received ack for segment num %d and from server %s\n",recvd_seq_num,recv_addr_arr);
 //	strcpy(ack_from,recv_addr);
 	return recvd_seq_num;		
 }
@@ -310,11 +313,19 @@ int recvd_all_ack(int sn)
 
 void slide_window()
 {
+	int i;
+//	printf("Sliding the window forward\n");
 	do
 	{
+		printf("Window slided for 1 packet\n");
+		for(i=0;i<no_of_receivers;i++)
+			send_buffer[oldest_unacked%n].ack[i] = 0;
 		oldest_unacked++;
 	}while(recvd_all_ack(oldest_unacked));
-	start_timer = oldest_unacked;
+	printf("Timer will start for segment %d now\n",oldest_unacked);
+	pthread_mutex_lock(&mutex_timer);
+		start_timer = oldest_unacked;
+	pthread_mutex_unlock(&mutex_timer);
 }
 
 void *recv_ack(void *ptr)
@@ -337,6 +348,7 @@ void *recv_ack(void *ptr)
 		
 		if(ret_val == 1)	//double dup ack
 		{
+			printf("Resending segments due to double dup ack\n");
 			for(i=0;i<no_of_receivers;i++)
 			{
 				pthread_mutex_lock(&mutex_ack);
@@ -357,7 +369,7 @@ void *recv_ack(void *ptr)
 		else if(recvd_all_ack(recvd_seq_num) && recvd_seq_num == oldest_unacked) //need to slide window
 		{
 			//Update curr_seq_num's ack array at the correct index using the ack_from which has IP_Address of the current receiver
-			pthread_mutex_unlock(&mutex_seq_num);
+			pthread_mutex_lock(&mutex_seq_num);
 				slide_window();
 			pthread_mutex_unlock(&mutex_seq_num);
 //			pthread_mutex_lock(&mutex_ack);
@@ -375,15 +387,16 @@ void process_timeout()
 		//exit
 	int sn = timer_seq_num%n;
 	int i;
+	printf("Timeout!!! resending segment %d to all an_ack receivers",timer_seq_num);
 	pthread_mutex_lock(&mutex_ack);
 		for(i=0;i<no_of_receivers;i++)
 			if(send_buffer[sn].ack[i] == 0)
 				udt_send(sn,i);
 	pthread_mutex_unlock(&mutex_ack);
 
-	pthread_mutex_lock(&mutex_seq_num);
+	pthread_mutex_lock(&mutex_timer);
 		start_timer = oldest_unacked;
-	pthread_mutex_unlock(&mutex_seq_num);
+	pthread_mutex_unlock(&mutex_timer);
 
 }
 
@@ -441,6 +454,7 @@ void * rdt_send(void *ptr)
 
 			if(is_pkt_earliest_transmitted())
 			{
+				printf("Packet %d is earliest transmitted so need to start timer",next_seq_num);
 				pthread_mutex_lock(&mutex_timer);
 					start_timer = next_seq_num;
 					//start_timer_thread(timer_thread);
@@ -449,9 +463,10 @@ void * rdt_send(void *ptr)
 
 			next_seq_num=(next_seq_num+1)%MAX_SEQ;
 		}		
-		pthread_mutex_lock(&mutex_seq_num);
+		pthread_mutex_lock(&mutex_timer);
 			if(start_timer != -1) //this means timer should start now
 			{
+				printf("Started timer for segment %d\n",start_timer);
 				timer_seq_num = start_timer;
 				start_timer = -1;
 				setup_timer();
