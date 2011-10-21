@@ -28,9 +28,9 @@ int main(int argc, char *argv[])
                 exit(1);
         }
 
-        if(pthread_join(receiver,NULL)!=0)
+       if(pthread_join(receiver,NULL)!=0)
         {
-                perror("Cannot Join recv_thread!\n");
+               perror("Cannot Join recv_thread!\n");
                 exit(1);
         }
 

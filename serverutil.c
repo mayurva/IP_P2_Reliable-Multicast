@@ -193,13 +193,16 @@ int udt_recv()
 	int numbytes,data_length;
 	char *a, *b, *c, *d, *e,*f;
 	flag = 0; 
-//	struct sockaddr_in their_addr; // connector's address information
 	int addr_len = sizeof (sender_addr);
 	strcpy(buf,"");
+	printf("Receiving Data...\n");
 	numbytes=recvfrom(soc, buf, MAXLEN , 0,(struct sockaddr *)&sender_addr, &addr_len);
-	if(numbytes == -1) {
+	if(numbytes == -1 || numbytes == 0) {
 		printf(" Error in receiving\n");
-		exit(-1);
+		//EOF condition.
+		fclose(file);
+		//exit(-1);
+		pthread_exit(NULL);
 	}
 	printf("\n\n***********Bytes Received: %d\n",numbytes);	
 //	printf("the received string is%s\n",buf);
@@ -319,16 +322,18 @@ int recv_data()
         uint16_t recv_checksum;
 
 	//Got a new packet
+	printf("Calling UDT RECV...\n");
 	udt_recv();
 
 	recv_checksum = compute_checksum(curr_pkt.data);
 	if(!(compare_checksum(recv_checksum)))
 	{
 		printf("Checksum mismatch\n");
-                return FALSE; //Discard and no ACK Sent
+               return FALSE; //Discard and no ACK Sent
 	}
 
 	ret_val = is_in_recv_window();
+	printf("^^^^^^^Ret Val in RECV DATA IS: %d\n",ret_val);
         if(ret_val == -1)
                 return TRUE;
         else if(ret_val == 0)

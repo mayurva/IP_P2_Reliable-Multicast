@@ -63,7 +63,7 @@ int udt_send(int seg_index,int server_index)
 //	printf("\n\nData length = %d",(int)strlen(send_buffer[seg_index].data));
 	sprintf(buf,"%u\n%u\n%u\n%s",send_buffer[seg_index].seq_num,send_buffer[seg_index].checksum,send_buffer[seg_index].pkt_type,send_buffer[seg_index].data);
 	len = strlen(buf);
-	printf("\n\n***********Bytes Sent: %d\ndata length is %d",len,(int)strlen(send_buffer[seg_index].data));
+	printf("\n***********Bytes Sent: %d \tdata length is %d\n\n",len,(int)strlen(send_buffer[seg_index].data));
 	if (sendto(soc,buf, len, 0, (struct sockaddr *)&their_addr, sizeof (their_addr)) == -1) {
        		printf("Error in sending");
        		exit(-1);
@@ -84,12 +84,20 @@ char * read_file()
     	if((fread(buff,sizeof(char),1,file))<0)
 	{
 		perror("\nRead error");
-		exit(1);
+	//	exit(1);
+	
+
+		temp_buf[j] = '~';
+		temp_buf[j+1] = '\0';
+		fclose(file);
+		return temp_buf;
+		//return '~'; //Indicate the end of file.
+		
 	}
 	temp_buf[j] = buff[0];
    }
    temp_buf[j] = '\0';
-   printf("returning!\n");
+ //  printf("returning!\n");
    return temp_buf;
 }
 
@@ -249,12 +257,14 @@ int update_ack_arr(int recvd_seq_num)
 	int is_sec_dup_ack = FALSE;
 	if(recvd_seq_num >= oldest_unacked)
 	{
-		printf("Updating ack array\n");
+		printf("Updating ack array.. \n");
 		for(i=0;i<no_of_receivers;i++)
 		{
+			//printf("Server_addr: %s\t Recv_addr: %s\n",server_addr[i].ip_addr,recv_addr.ip_addr);
 			if(strcmp(server_addr[i].ip_addr,recv_addr.ip_addr)==0)
 			{
 				send_buffer[(recvd_seq_num)%n].ack[i]+=1;
+				printf("ACK[%d] for Packet: %d is: %d\n",i,recvd_seq_num,send_buffer[recvd_seq_num%n].ack[i]);
 				if(send_buffer[(recvd_seq_num)%n].ack[i] >=3) //this is the second dup ack
 				{
 					send_buffer[(recvd_seq_num)%n].ack[i]=1; //reset the counter 
@@ -266,6 +276,7 @@ int update_ack_arr(int recvd_seq_num)
 			
 		}
 	}
+	printf("Returning from Update Ack\n");
 	return is_sec_dup_ack;
 }
 
@@ -370,6 +381,7 @@ void *recv_ack(void *ptr)
 		{
 			//Update curr_seq_num's ack array at the correct index using the ack_from which has IP_Address of the current receiver
 			pthread_mutex_lock(&mutex_seq_num);
+				printf("Sliding Window!...\n");
 				slide_window();
 			pthread_mutex_unlock(&mutex_seq_num);
 //			pthread_mutex_lock(&mutex_ack);
@@ -395,8 +407,10 @@ void process_timeout()
 	pthread_mutex_unlock(&mutex_ack);
 
 	pthread_mutex_lock(&mutex_timer);
+	//printf("Resetting Timer..\n");
 		start_timer = oldest_unacked;
 	pthread_mutex_unlock(&mutex_timer);
+	
 
 }
 
@@ -409,19 +423,25 @@ void process_timeout()
 int is_buffer_avail()
 {
 	pthread_mutex_lock(&mutex_seq_num);
-		if(next_seq_num-oldest_unacked<n)
+//	printf("Next Seq Num: %d\t Oldest Unacked: %d\t",next_seq_num,oldest_unacked);
+		if(next_seq_num-oldest_unacked<n){
+			 pthread_mutex_unlock(&mutex_seq_num);
 			return TRUE;
-		return FALSE;
+		}
 	pthread_mutex_unlock(&mutex_seq_num);
+	return FALSE;
 }
 
 int is_pkt_earliest_transmitted()
 {
+	printf("In earliest Trans....\n");
 	pthread_mutex_lock(&mutex_seq_num);
-		if(oldest_unacked == next_seq_num)
+		if(oldest_unacked == next_seq_num){
+			 pthread_mutex_unlock(&mutex_seq_num);
 			return TRUE;
-		return FALSE;
+		}
 	pthread_mutex_unlock(&mutex_seq_num);
+	return FALSE;
 }
 
 void setup_timer()
@@ -441,17 +461,25 @@ void * rdt_send(void *ptr)
 	//printf("In RDT_SEND!\n");
 	while(1)
 	{
+		//printf("Checking for Buff...\n");
 		if(is_buffer_avail())	
 		{
-			//printf("Buffer Available: Getting 1 MSS from File!\n");
-			printf("Next is: %d",next_seq_num);
-			strcpy(send_buffer[next_seq_num].data,read_file()); //copy 1 segment data into sender buffer
-			printf("Data got: %s\n",send_buffer[next_seq_num].data);
+			printf("Buffer Available: Getting 1 MSS from File!\n");
+			//printf("Next Seq Num is: %d\n",next_seq_num);
+			char *tmp = read_file();
+			if(strstr(tmp,"~") == NULL) 
+				strcpy(send_buffer[next_seq_num].data,tmp); //copy 1 segment data into sender buffer
+			else //Condition says that EOF has reached, break from loop. TODO : Last segment containing EOF has pkt loss right now.
+			{	
+				printf("Breaking!\n");
+				break;
+			}
+			printf("New Data Read: %s\n",send_buffer[next_seq_num].data);
                 	send_buffer[next_seq_num].data[strlen(send_buffer[next_seq_num].data)] = '\0';
 			create_segment(next_seq_num);
 			for(j=0;j<no_of_receivers;j++)
 				udt_send(next_seq_num,j);
-
+			printf("Out of UDT_SEND..\n");
 			if(is_pkt_earliest_transmitted())
 			{
 				printf("Packet %d is earliest transmitted so need to start timer",next_seq_num);
@@ -462,7 +490,9 @@ void * rdt_send(void *ptr)
 			}
 
 			next_seq_num=(next_seq_num+1)%MAX_SEQ;
-		}		
+			printf("Next Seq Num in Send Thread is: %d\n",next_seq_num);
+		}
+		//printf("Lock in Timer..\n");		
 		pthread_mutex_lock(&mutex_timer);
 			if(start_timer != -1) //this means timer should start now
 			{
@@ -472,6 +502,7 @@ void * rdt_send(void *ptr)
 				setup_timer();
 			}
 		pthread_mutex_unlock(&mutex_timer);
+		//printf("Unlock from Timer..\n");
 		/*pthread_mutex_lock(&mutex_retransmit);
 			for(i=0;i<no_of_receivers;i++)
 			{
@@ -526,7 +557,7 @@ int init_sender(int argc,char *argv[])
 		strcpy(server_addr[i-1].ip_addr,argv[i]);
 	}
 
-	printf("no of receivers: %d\n",no_of_receivers);
+	//printf("no of receivers: %d\n",no_of_receivers);
 	for(i=0;i<no_of_receivers;i++)
 	{
 		printf("Receiver %d, ip addr %s\n",i,server_addr[i].ip_addr);
@@ -539,13 +570,14 @@ int init_sender(int argc,char *argv[])
 
 //	initialize_sender_buffer();	
 
-	printf("Initializing Send Buffer! \n");
+	//printf("Initializing Send Buffer! \n");
 	send_buffer = (segment *)malloc(n*sizeof(segment)); //allocate space for sender buffer 
 	
-	printf("Initializing Retransmit Array! \n");
+	//printf("Initializing Retransmit Array! \n");
 	//retransmit = (int *)malloc(no_of_receivers*sizeof(int));	
 	signal(SIGALRM,process_timeout);
-	int j;
+	printf("After Process Timeout!\n\n");
+	//int j;
 /*	for(i=0;i<n;i++){
 		send_buffer[i].retransmit = (int *)malloc(no_of_receivers*sizeof(int));
 		for(j=0;j<no_of_receivers;j++){

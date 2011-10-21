@@ -2,3 +2,7 @@ The data is getting transferred correctly.. but there is a problem with tokenizi
 The problem is at line 128 in server util. Comment is added on that line.
 
 At the receiver, data part is now delimited. So segments are now constructed properly. But fails for N = 512, MSS = 999. Maybe possible out of order packets. Need to redirect output to a file to check.
+
+_________________________________________________________________________________
+
+LATEST: Timeout VALUE is now 10sec. Program going into a deadlock when checksums mismatch. Main Problem: Data not getting sent across sockets correctly. SERIALIZATION Required. Logic working more or less.
