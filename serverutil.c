@@ -191,12 +191,14 @@ int add_to_buffer(int index)
 
 int udt_recv()
 {
-	char buf[MAXLEN];
+	char *buf;
 	int numbytes,data_length;
 	char *a, *b, *c, *d, *e,*f;
 	flag = 0; 
 	int addr_len = sizeof (sender_addr);
-	strcpy(buf,"");
+	//strcpy(buf,"");
+	buf = (char*)calloc(MAXLEN,sizeof(char));
+	buf[0]='\0';
 	printf("Receiving Data...\n");
 	numbytes=recvfrom(soc, buf, MAXLEN , 0,(struct sockaddr *)&sender_addr, &addr_len);
 	if(numbytes == -1 || numbytes == 0) {
@@ -209,7 +211,8 @@ int udt_recv()
 	printf("\n\n***********Bytes Received: %d AND DATA IS: %s\n\n",numbytes,buf);	
 //	printf("the received string is%s\n",buf);
 //	buf[strlen(buf)] = '\0';
-	
+	//d[0] = '\0';
+	//curr_pkt.data[0] = '\0';
 	a = strtok_r(buf,"\n",&d);
 	curr_pkt.seq_num = (uint32_t)atoi(a);
 
@@ -225,6 +228,7 @@ int udt_recv()
 		exit(-1);
 	}*/
 	strcpy(curr_pkt.data,d);
+	d[0] = '\0';
 	fflush(stdout);
 	flag = 1;
 /*	f = strtok(NULL,"\n"); //'f' contains the data_length passed from sender
@@ -255,6 +259,7 @@ int udt_recv()
 	printf("For received data.. length is %d\n data is %s\n",(int)strlen(d),d);
 	printf("For copied data.. length is %d\n data is %s\n\n",(int)strlen(curr_pkt.data),curr_pkt.data);
 	strcpy(d,"");	
+	free(buf);
 }
 
 
@@ -333,13 +338,13 @@ int recv_data()
 	udt_recv();
 
 	recv_checksum = compute_checksum(curr_pkt.data);
-/*
+
 	if(!(compare_checksum(recv_checksum)))
 	{
 		printf("Checksum mismatch\n");
                return FALSE; //Discard and no ACK Sent
 	}
-*/
+
 	ret_val = is_in_recv_window();
 	printf("^^^^^^^Ret Val in RECV DATA IS: %d\n",ret_val);
         if(ret_val == -1)

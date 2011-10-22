@@ -42,6 +42,25 @@ pthread_mutex_t mutex_timer = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_ack = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_seq_num = PTHREAD_MUTEX_INITIALIZER;
 
+
+void tokenize(char *buf)
+{
+        char *a,*b,*c,*d;
+        a = strtok_r(buf,"\n",&d);
+        printf("\n\nSeq num %u\n",(uint32_t)atoi(a));
+
+        b = strtok_r(NULL,"\n",&d);
+        printf("Checksum %hu\n",(uint16_t)atoi(b));
+
+        c = strtok_r(NULL,"\n",&d);
+        printf("packet type %hu\n",(uint16_t)atoi(c));
+
+        printf("data len is %u\t Data is: %s\n\n",(unsigned int)strlen(d),d);
+
+
+}
+
+
 int udt_send(int seg_index,int server_index)
 {
 	struct sockaddr_in their_addr; // connector's address information
@@ -59,19 +78,31 @@ int udt_send(int seg_index,int server_index)
 	their_addr.sin_family = AF_INET;     // host byte order
 	their_addr.sin_port = htons(server_port); // short, network byte order
 	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
-	strcpy(buf,"");
-//	printf("\n\nData length = %d",(int)strlen(send_buffer[seg_index].data));
+	//strcpy(buf,"");
+	buf[0]='\0';
 	seg_index = seg_index%n;
 //	printf("Seg Index is: %d\n",seg_index);
 	
 	sprintf(buf,"%u\n%u\n%u\n%s",send_buffer[seg_index].seq_num,send_buffer[seg_index].checksum,send_buffer[seg_index].pkt_type,send_buffer[seg_index].data);
 	len = strlen(buf);
 	printf("\n***********Bytes Sent: %d \tdata length is %d\t seq num is %d\t Buffer index is: %d\t DATA IS: %s\n\n",len,(int)strlen(send_buffer[seg_index].data),send_buffer[seg_index].seq_num,seg_index,send_buffer[seg_index].data);
+	
+	//Clearing Seg_Index's Data part
+	printf("Buf sent::: %s\n\n",buf);
+	strcpy(send_buffer[seg_index].data,"");
+
 	if (sendto(soc,buf, len, 0, (struct sockaddr *)&their_addr, sizeof (their_addr)) == -1) {
        		printf("Error in sending");
        		exit(-1);
 	}	
 
+	//Testing for Buf
+	if(len!=19)
+	{
+		printf("$$$ Tokenizing: \n");	
+		tokenize(buf);
+	}
+	fflush(stdout);
 }
 
 // Read 1 MSS worth data from file and return the data - reads byte-by-byte
