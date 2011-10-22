@@ -61,9 +61,12 @@ int udt_send(int seg_index,int server_index)
 	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
 	strcpy(buf,"");
 //	printf("\n\nData length = %d",(int)strlen(send_buffer[seg_index].data));
+	seg_index = seg_index%n;
+//	printf("Seg Index is: %d\n",seg_index);
+	
 	sprintf(buf,"%u\n%u\n%u\n%s",send_buffer[seg_index].seq_num,send_buffer[seg_index].checksum,send_buffer[seg_index].pkt_type,send_buffer[seg_index].data);
 	len = strlen(buf);
-	printf("\n***********Bytes Sent: %d \tdata length is %d\n\n",len,(int)strlen(send_buffer[seg_index].data));
+	printf("\n***********Bytes Sent: %d \tdata length is %d\t seq num is %d\t Buffer index is: %d\t DATA IS: %s\n\n",len,(int)strlen(send_buffer[seg_index].data),send_buffer[seg_index].seq_num,seg_index,send_buffer[seg_index].data);
 	if (sendto(soc,buf, len, 0, (struct sockaddr *)&their_addr, sizeof (their_addr)) == -1) {
        		printf("Error in sending");
        		exit(-1);
@@ -136,6 +139,7 @@ void create_segment(uint32_t seg_num)
 {
 	int i;
 	send_buffer[(seg_num)%n].seq_num = seg_num;
+	printf("Creating Segment for Sequence No: %d at Index %d\n",seg_num,seg_num%n);
 	send_buffer[(seg_num)%n].pkt_type = 0x5555; //indicates data packet - 0101010101010101
 	send_buffer[(seg_num)%n].checksum = create_checksum(send_buffer[(seg_num)%n].data);
 	send_buffer[(seg_num)%n].ack = (int *)malloc(no_of_receivers*sizeof(int));
@@ -467,15 +471,18 @@ void * rdt_send(void *ptr)
 			printf("Buffer Available: Getting 1 MSS from File!\n");
 			//printf("Next Seq Num is: %d\n",next_seq_num);
 			char *tmp = read_file();
-			if(strstr(tmp,"~") == NULL) 
-				strcpy(send_buffer[next_seq_num].data,tmp); //copy 1 segment data into sender buffer
+			if(strstr(tmp,"~") == NULL){ 
+				
+				strcpy(send_buffer[next_seq_num%n].data,tmp); //copy 1 segment data into sender buffer
+				printf("Data at %d\t is: %s",next_seq_num%n,send_buffer[next_seq_num%n].data);
+			}
 			else //Condition says that EOF has reached, break from loop. TODO : Last segment containing EOF has pkt loss right now.
 			{	
 				printf("Breaking!\n");
 				break;
 			}
-			printf("New Data Read: %s\n",send_buffer[next_seq_num].data);
-                	send_buffer[next_seq_num].data[strlen(send_buffer[next_seq_num].data)] = '\0';
+			printf("New Data Read: %s\n",send_buffer[next_seq_num%n].data);
+                	send_buffer[next_seq_num%n].data[strlen(send_buffer[next_seq_num%n].data)] = '\0';
 			create_segment(next_seq_num);
 			for(j=0;j<no_of_receivers;j++)
 				udt_send(next_seq_num,j);

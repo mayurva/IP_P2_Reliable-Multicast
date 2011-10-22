@@ -118,7 +118,9 @@ int udt_send(int seg_index)
 
 	//SEND THE ACK For Current Packet (seg_index)
 	//Right now overrighting the recv_buffer's pkt_type to indicate that it is now an ACK Packet (Logically) ..
-
+	recv_buffer[seg_index%n].seq_num = seg_index;
+	seg_index = seg_index%n;
+	printf("In UDT SEND: Seg index is: %d\t Seq Num is %d\n",seg_index,recv_buffer[seg_index].seq_num);
 	recv_buffer[seg_index].pkt_type = 0xAAAA;  //indicates ACK packet - 1010101010101010
         sprintf(buf,"%d\n%d\n%d\n",recv_buffer[seg_index].seq_num,0,recv_buffer[seg_index].pkt_type);
         
@@ -145,8 +147,8 @@ int udt_send(int seg_index)
 int send_ack(int seg_index)
 {
 		int index = seg_index%n;
-		printf("\nSent ACK For Index: %d",index);
-		udt_send(index);
+		printf("\nSent ACK For Packet: %d",seg_index);
+		udt_send(seg_index);
 
 }
 
@@ -160,7 +162,7 @@ int compare_checksum(uint16_t checksum)
 
 int add_to_buffer(int index)
 {
-        printf("Index is %d\n",index);
+//        printf("Index is %d\n",index);
 	
 	
         recv_buffer[index].seq_num = curr_pkt.seq_num;
@@ -168,7 +170,7 @@ int add_to_buffer(int index)
 	//ARRIVED INDICATES current packet is arrived
 	recv_buffer[index].arrived = TRUE;
 
-/*        if((recv_buffer[index].data = (char*)malloc(strlen(curr_pkt.data)*sizeof(char)))==NULL){
+/*        if((recv_buffer[index]rdata = (char*)malloc(strlen(curr_pkt.data)*sizeof(char)))==NULL){
                 perror("CANNOT ALLOCATE MEMORY :( : Add to Buffer \n");
                 exit(1);
         }*/
@@ -204,9 +206,10 @@ int udt_recv()
 		//exit(-1);
 		pthread_exit(NULL);
 	}
-	printf("\n\n***********Bytes Received: %d\n",numbytes);	
+	printf("\n\n***********Bytes Received: %d AND DATA IS: %s\n\n",numbytes,buf);	
 //	printf("the received string is%s\n",buf);
 //	buf[strlen(buf)] = '\0';
+	
 	a = strtok_r(buf,"\n",&d);
 	curr_pkt.seq_num = (uint32_t)atoi(a);
 
@@ -222,6 +225,7 @@ int udt_recv()
 		exit(-1);
 	}*/
 	strcpy(curr_pkt.data,d);
+	fflush(stdout);
 	flag = 1;
 /*	f = strtok(NULL,"\n"); //'f' contains the data_length passed from sender
 	d = strtok(NULL,"\0"); //This is not allowed, since d is not a null terminated string now.
@@ -274,7 +278,10 @@ int is_in_recv_window()
 	if(curr_pkt.seq_num<next_seg_seq_num)
 		return -1;
 	else if(curr_pkt.seq_num<next_seg_seq_num+n)
+	{
+		printf("\nCurr pkt = %d, Next_seg num = %d\n",curr_pkt.seq_num,next_seg_seq_num);
 		return curr_pkt.seq_num-next_seg_seq_num+1;
+	}
 	return 0;
 }
 
@@ -326,12 +333,13 @@ int recv_data()
 	udt_recv();
 
 	recv_checksum = compute_checksum(curr_pkt.data);
+/*
 	if(!(compare_checksum(recv_checksum)))
 	{
 		printf("Checksum mismatch\n");
                return FALSE; //Discard and no ACK Sent
 	}
-
+*/
 	ret_val = is_in_recv_window();
 	printf("^^^^^^^Ret Val in RECV DATA IS: %d\n",ret_val);
         if(ret_val == -1)
@@ -345,7 +353,8 @@ int recv_data()
 		add_to_buffer(ret_val-1);
 	
 		int i;	
-		for(i = next_seg_seq_num%n;recv_buffer[i].arrived == TRUE;i=(i+1)%n){
+	//	for(i = next_seg_seq_num%n;recv_buffer[i].arrived == TRUE;i=(i+1)%n){
+		for(i=0;recv_buffer[i].arrived ==TRUE;i=(i+1)%n){
 			slide_window();
 			write_file(recv_buffer[i].data); //when the window slides, write the corresponding segment to file
 			recv_buffer[i].arrived = FALSE;
