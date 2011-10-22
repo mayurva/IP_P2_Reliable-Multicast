@@ -20,8 +20,6 @@ int n;
 FILE *file;
 int server_port;
 float p;
-//segment curr_pkt,*recv_buffer;
-//segment curr_pkt;
 int buf_counter;
 uint32_t next_seg_seq_num;
 int soc,send_soc;
@@ -122,7 +120,7 @@ int udt_send(int seg_index)
 	seg_index = seg_index%n;
 	printf("In UDT SEND: Seg index is: %d\t Seq Num is %d\n",seg_index,recv_buffer[seg_index].seq_num);
 //	printf("Pkt type in receive buffer is : %x", (uint16_t)recv_buffer[seg_index].pkt_type);
-	if(curr_pkt.pkt_type == 21845) //which is 0x5555 in hex
+	if(curr_pkt.pkt_type == 0x5555) //which is 0x5555 in hex
 	{
 		recv_buffer[seg_index].pkt_type = 0xAAAA;  //indicates normal ACK packet 
 
@@ -381,7 +379,7 @@ int recv_data()
 	}
 
 	ret_val = is_in_recv_window();
-	printf("^^^^^^^Ret Val in RECV DATA IS: %d\n",ret_val);
+	//printf("^^^^^^^Ret Val in RECV DATA IS: %d\n",ret_val);
         if(ret_val == -1)
                 return TRUE;
         else if(ret_val == 0)

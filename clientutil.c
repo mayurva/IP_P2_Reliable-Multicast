@@ -97,11 +97,11 @@ int udt_send(int seg_index,int server_index)
 	}	
 
 	//Testing for Buf
-	if(len!=19)
-	{
-		printf("$$$ Tokenizing: \n");	
-		tokenize(buf);
-	}
+//	if(len!=19)
+//	{
+//		printf("$$$ Tokenizing: \n");	
+//		tokenize(buf);
+//	}
 	fflush(stdout);
 }
 
@@ -306,7 +306,7 @@ int update_ack_arr(int recvd_seq_num)
 			
 		}
 	}
-	printf("Returning from Update Ack\n");
+	//printf("Returning from Update Ack\n");
 	return is_sec_dup_ack;
 }
 
@@ -339,7 +339,7 @@ uint32_t wait_for_ack()
 	recvd_seq_num = (uint32_t)atoi(a);
 
 	send_buffer[recvd_seq_num%n].pkt_type = (uint16_t)atoi(c);
-	printf("@@@@ACK Type Set: %x \t for Seq Num: %d in Index %d",send_buffer[recvd_seq_num%n].pkt_type,recvd_seq_num,recvd_seq_num%n);	
+	//printf("@@@@ACK Type Set: %x \t for Seq Num: %d in Index %d",send_buffer[recvd_seq_num%n].pkt_type,recvd_seq_num,recvd_seq_num%n);	
 
 	strcpy(recv_addr.ip_addr,recv_addr_arr);
 	printf("Received ack for segment num %d and from server %s\n",recvd_seq_num,recv_addr_arr);
@@ -523,6 +523,7 @@ void * rdt_send(void *ptr)
 		if(reached_end()==TRUE)
 		{
 			printf("\nExiting sender thread in client ... \n\n");
+			free(send_buffer);
 			pthread_exit(NULL);
 		}
 		if(is_buffer_avail())	
@@ -619,7 +620,7 @@ int init_sender(int argc,char *argv[])
 	mss = atoi(argv[argc-1]);
 	printf("MSS is:%d\n",mss);
 	n = atoi(argv[argc-2]);
-	//printf("Window size:%d\n",n);
+	printf("Window size:%d\n",n);
 	if(!(file = fopen(argv[argc-3],"rb")))
 	{
 		printf("File opening failed\n");
