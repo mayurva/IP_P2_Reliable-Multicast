@@ -115,12 +115,12 @@ char * read_file()
 
     for(j=0;j<mss;j++)
     {
-    //	if((fread(buff,sizeof(char),1,file))<0)
 	if(fread(buff,sizeof(char),1,file)==0) //means end of file is reached
 	{
 		temp_buf[j] = '\0';
 		fclose(file);
-//		printf("\nInput file closed ... Sending the last packet now ... \n\n");
+		file = NULL;
+		printf("***@@@@@@Closing the File \n\n");
 		return temp_buf;
 		
 	}
@@ -334,10 +334,13 @@ uint32_t wait_for_ack()
 	inet_ntop(AF_INET, &sender_addr.sin_addr.s_addr, recv_addr_arr, sizeof recv_addr_arr); //extract IP address from sender_addr
 
 	a=strtok(buf,"\n");
-	b = strtok(buf,"\n");
-	c = strtok(buf,"\n");
+	b = strtok(NULL,"\n");
+	c = strtok(NULL,"\n");
 	recvd_seq_num = (uint32_t)atoi(a);
+
 	send_buffer[recvd_seq_num%n].pkt_type = (uint16_t)atoi(c);
+	printf("@@@@ACK Type Set: %x \t for Seq Num: %d in Index %d",send_buffer[recvd_seq_num%n].pkt_type,recvd_seq_num,recvd_seq_num%n);	
+
 	strcpy(recv_addr.ip_addr,recv_addr_arr);
 	printf("Received ack for segment num %d and from server %s\n",recvd_seq_num,recv_addr_arr);
 //	strcpy(ack_from,recv_addr);
@@ -413,7 +416,7 @@ void *recv_ack(void *ptr)
 		{
 			//Update curr_seq_num's ack array at the correct index using the ack_from which has IP_Address of the current receiver
 
-			if(send_buffer[recvd_seq_num%n].pkt_type==170){ //indicates 0x00AA in decimal
+			if(send_buffer[recvd_seq_num%n].pkt_type==0x00AA){ //indicates 0x00AA in decimal
 				printf("\n\nIn receive thread of client ... setting end_of_task variable and exiting ... \n\n");
 				//LOCK
 				pthread_mutex_lock(&mutex_end_of_task);
@@ -466,7 +469,7 @@ int is_buffer_avail()
 {
 	pthread_mutex_lock(&mutex_seq_num);
 //	printf("Next Seq Num: %d\t Oldest Unacked: %d\t",next_seq_num,oldest_unacked);
-		if(next_seq_num-oldest_unacked<n){
+		if(next_seq_num-oldest_unacked<n && file!=NULL){
 			 pthread_mutex_unlock(&mutex_seq_num);
 			return TRUE;
 		}
@@ -616,7 +619,7 @@ int init_sender(int argc,char *argv[])
 	mss = atoi(argv[argc-1]);
 	printf("MSS is:%d\n",mss);
 	n = atoi(argv[argc-2]);
-	printf("Window size:%d\n",n);
+	//printf("Window size:%d\n",n);
 	if(!(file = fopen(argv[argc-3],"rb")))
 	{
 		printf("File opening failed\n");
@@ -625,10 +628,12 @@ int init_sender(int argc,char *argv[])
 	server_port = atoi(argv[argc-4]);
 	printf("Server port is: %d\n",server_port);
 
-	populate_public_ip();
+	//populate_public_ip();
 //	populate_server_ip(argc);
 	
 	no_of_receivers = argc - 5;
+	printf("No of Receivers: %d\n",no_of_receivers);
+	populate_public_ip();
 	server_addr = (host_info*)malloc(sizeof(host_info)*(no_of_receivers));	
 	
 	for(i=argc-5;i>=1;i--){
