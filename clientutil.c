@@ -38,10 +38,11 @@ int timer_seq_num;
 int oldest_unacked;   //denotes the no. of oldest unacknowledged segment in buffer
 int next_seq_num;     //to populate seq no. field in seg hdr 
 
+int end_of_task;
 pthread_mutex_t mutex_timer = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_ack = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutex_seq_num = PTHREAD_MUTEX_INITIALIZER;
-
+pthread_mutex_t mutex_end_of_task = PTHREAD_MUTEX_INITIALIZER;
 
 void tokenize(char *buf)
 {
@@ -56,7 +57,6 @@ void tokenize(char *buf)
         printf("packet type %hu\n",(uint16_t)atoi(c));
 
         printf("data len is %u\t Data is: %s\n\n",(unsigned int)strlen(d),d);
-
 
 }
 
@@ -115,23 +115,18 @@ char * read_file()
 
     for(j=0;j<mss;j++)
     {
-    	if((fread(buff,sizeof(char),1,file))<0)
+    //	if((fread(buff,sizeof(char),1,file))<0)
+	if(fread(buff,sizeof(char),1,file)==0) //means end of file is reached
 	{
-		perror("\nRead error");
-	//	exit(1);
-	
-
-		temp_buf[j] = '~';
-		temp_buf[j+1] = '\0';
+		temp_buf[j] = '\0';
 		fclose(file);
+//		printf("\nInput file closed ... Sending the last packet now ... \n\n");
 		return temp_buf;
-		//return '~'; //Indicate the end of file.
 		
 	}
 	temp_buf[j] = buff[0];
    }
    temp_buf[j] = '\0';
- //  printf("returning!\n");
    return temp_buf;
 }
 
@@ -166,12 +161,12 @@ uint16_t create_checksum(char *data)
 }
 
 // appends header to payload
-void create_segment(uint32_t seg_num)
+void create_segment(uint32_t seg_num,uint16_t pkt_type)
 {
 	int i;
 	send_buffer[(seg_num)%n].seq_num = seg_num;
 	printf("Creating Segment for Sequence No: %d at Index %d\n",seg_num,seg_num%n);
-	send_buffer[(seg_num)%n].pkt_type = 0x5555; //indicates data packet - 0101010101010101
+	send_buffer[(seg_num)%n].pkt_type = pkt_type; 
 	send_buffer[(seg_num)%n].checksum = create_checksum(send_buffer[(seg_num)%n].data);
 	send_buffer[(seg_num)%n].ack = (int *)malloc(no_of_receivers*sizeof(int));
 	for(i=0;i<no_of_receivers;i++)
@@ -321,7 +316,7 @@ uint32_t wait_for_ack()
 	char buf[MAXLEN];
         int numbytes,i;
 
-	char *a;
+	char *a,*b,*c;
 	uint32_t recvd_seq_num;
 
 	char recv_addr_arr[16] = {0}; //to store IP address of receiver from data from socket 
@@ -339,8 +334,10 @@ uint32_t wait_for_ack()
 	inet_ntop(AF_INET, &sender_addr.sin_addr.s_addr, recv_addr_arr, sizeof recv_addr_arr); //extract IP address from sender_addr
 
 	a=strtok(buf,"\n");
-		
+	b = strtok(buf,"\n");
+	c = strtok(buf,"\n");
 	recvd_seq_num = (uint32_t)atoi(a);
+	send_buffer[recvd_seq_num%n].pkt_type = (uint16_t)atoi(c);
 	strcpy(recv_addr.ip_addr,recv_addr_arr);
 	printf("Received ack for segment num %d and from server %s\n",recvd_seq_num,recv_addr_arr);
 //	strcpy(ack_from,recv_addr);
@@ -415,6 +412,16 @@ void *recv_ack(void *ptr)
 		else if(recvd_all_ack(recvd_seq_num) && recvd_seq_num == oldest_unacked) //need to slide window
 		{
 			//Update curr_seq_num's ack array at the correct index using the ack_from which has IP_Address of the current receiver
+
+			if(send_buffer[recvd_seq_num%n].pkt_type==170){ //indicates 0x00AA in decimal
+				printf("\n\nIn receive thread of client ... setting end_of_task variable and exiting ... \n\n");
+				//LOCK
+				pthread_mutex_lock(&mutex_end_of_task);
+				end_of_task = 1;	
+				//UNLOCK
+				pthread_mutex_unlock(&mutex_end_of_task);
+				pthread_exit(NULL);
+			}	
 			pthread_mutex_lock(&mutex_seq_num);
 				printf("Sliding Window!...\n");
 				slide_window();
@@ -489,6 +496,19 @@ void setup_timer()
 	setitimer(ITIMER_REAL,&newtime,&oldtime);
 }
 
+int reached_end(){
+	//LOCK
+	pthread_mutex_lock(&mutex_end_of_task);
+	if(end_of_task == 1){
+		//UNLOCK
+		pthread_mutex_unlock(&mutex_end_of_task);
+		return TRUE;
+	}
+	//UNLOCK
+	pthread_mutex_unlock(&mutex_end_of_task);
+	return FALSE;
+}
+
 void * rdt_send(void *ptr)
 {
 	int i,j;
@@ -497,24 +517,44 @@ void * rdt_send(void *ptr)
 	while(1)
 	{
 		//printf("Checking for Buff...\n");
+		if(reached_end()==TRUE)
+		{
+			printf("\nExiting sender thread in client ... \n\n");
+			pthread_exit(NULL);
+		}
 		if(is_buffer_avail())	
 		{
 			printf("Buffer Available: Getting 1 MSS from File!\n");
 			//printf("Next Seq Num is: %d\n",next_seq_num);
 			char *tmp = read_file();
-			if(strstr(tmp,"~") == NULL){ 
+
+			strcpy(send_buffer[next_seq_num%n].data,tmp); //copy 1 segment data into sender buffer
+                       		
+		//	printf("New Data Read: %s\n",send_buffer[next_seq_num%n].data);
+                        send_buffer[next_seq_num%n].data[strlen(send_buffer[next_seq_num%n].data)] = '\0';
+
+	                printf("Data at %d\t is: %s",next_seq_num%n,send_buffer[next_seq_num%n].data);
+
+                       	if(strlen(tmp)!=mss)			
+			{
+				printf("\nGot the last packet from file .... \n\n");
+				create_segment(next_seq_num,0x5500); //denotes the last packet
+			}
+			else
+				create_segment(next_seq_num,0x5555); //denotes normal data packet		
+		//	if(strstr(tmp,"~") == NULL){ 
 				
-				strcpy(send_buffer[next_seq_num%n].data,tmp); //copy 1 segment data into sender buffer
-				printf("Data at %d\t is: %s",next_seq_num%n,send_buffer[next_seq_num%n].data);
-			}
-			else //Condition says that EOF has reached, break from loop. TODO : Last segment containing EOF has pkt loss right now.
-			{	
-				printf("Breaking!\n");
-				break;
-			}
-			printf("New Data Read: %s\n",send_buffer[next_seq_num%n].data);
-                	send_buffer[next_seq_num%n].data[strlen(send_buffer[next_seq_num%n].data)] = '\0';
-			create_segment(next_seq_num);
+		//		strcpy(send_buffer[next_seq_num%n].data,tmp); //copy 1 segment data into sender buffer
+		//		printf("Data at %d\t is: %s",next_seq_num%n,send_buffer[next_seq_num%n].data);
+		//	}
+		//	else //Condition says that EOF has reached, break from loop. TODO : Last segment containing EOF has pkt loss right now.
+		//	{	
+		//		printf("Breaking!\n");
+		//		break;
+		//	}
+		//	printf("New Data Read: %s\n",send_buffer[next_seq_num%n].data);
+               // 	send_buffer[next_seq_num%n].data[strlen(send_buffer[next_seq_num%n].data)] = '\0';
+	//		create_segment(next_seq_num);
 			for(j=0;j<no_of_receivers;j++)
 				udt_send(next_seq_num,j);
 			printf("Out of UDT_SEND..\n");
@@ -562,7 +602,7 @@ int init_sender(int argc,char *argv[])
 
 	oldest_unacked = 0;
 	next_seq_num = 0;
-	
+ 	end_of_task = 0;	
 	//pthread_t sender_thread;
 //	pthread_t timer_thread;
 	//pthread_t recv_thread;

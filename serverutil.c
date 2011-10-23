@@ -121,8 +121,41 @@ int udt_send(int seg_index)
 	recv_buffer[seg_index%n].seq_num = seg_index;
 	seg_index = seg_index%n;
 	printf("In UDT SEND: Seg index is: %d\t Seq Num is %d\n",seg_index,recv_buffer[seg_index].seq_num);
-	recv_buffer[seg_index].pkt_type = 0xAAAA;  //indicates ACK packet - 1010101010101010
-        sprintf(buf,"%d\n%d\n%d\n",recv_buffer[seg_index].seq_num,0,recv_buffer[seg_index].pkt_type);
+//	printf("Pkt type in receive buffer is : %x", (uint16_t)recv_buffer[seg_index].pkt_type);
+	if(curr_pkt.pkt_type == 21845) //which is 0x5555 in hex
+	{
+		recv_buffer[seg_index].pkt_type = 0xAAAA;  //indicates normal ACK packet 
+
+		sprintf(buf,"%d\n%d\n%d\n",recv_buffer[seg_index].seq_num,0,recv_buffer[seg_index].pkt_type);
+
+		len = strlen(buf);
+	        printf("\n\n***********ACK Bytes Sent: %d\n\n",len);
+	        if (sendto(soc,buf, len, 0, (struct sockaddr *)&sender_addr, sizeof (sender_addr)) == -1) {
+                printf("Error in sending");
+                exit(-1);
+		}
+	}
+	else
+	{
+		recv_buffer[seg_index].pkt_type = 0X00AA;  //indicates ACK for last packet
+
+		sprintf(buf,"%d\n%d\n%d\n",recv_buffer[seg_index].seq_num,0,recv_buffer[seg_index].pkt_type);
+
+		len = strlen(buf);
+	        printf("\n\n***********ACK Bytes Sent: %d\n\n",len);
+	        if (sendto(soc,buf, len, 0, (struct sockaddr *)&sender_addr, sizeof (sender_addr)) == -1) {
+                printf("Error in sending");
+                exit(-1);
+		}
+		else{
+                        printf("\nACK sent for last packet in file ... closing output file and exiting ... \n\n");
+			fclose(file);
+                        pthread_exit(NULL);
+                }
+        }
+
+        
+//	sprintf(buf,"%d\n%d\n%d\n",recv_buffer[seg_index].seq_num,0,recv_buffer[seg_index].pkt_type);
         
 /*
 	//socket to send
@@ -131,7 +164,7 @@ int udt_send(int seg_index)
                 exit(-1);
         }
 */
-
+/*
         len = strlen(buf);
         printf("\n\n***********ACK Bytes Sent: %d",len);
 //      if (sendto(send_soc,buf, len, 0, (struct sockaddr *)&sender_addr, sizeof (sender_addr)) == -1) {
@@ -139,7 +172,7 @@ int udt_send(int seg_index)
                 printf("Error in sending");
                 exit(-1);
         }
-
+*/
 }
 
 
@@ -200,6 +233,7 @@ int udt_recv()
 	buf = (char*)calloc(MAXLEN,sizeof(char));
 	buf[0]='\0';
 	printf("Receiving Data...\n");
+
 	numbytes=recvfrom(soc, buf, MAXLEN , 0,(struct sockaddr *)&sender_addr, &addr_len);
 	if(numbytes == -1 || numbytes == 0) {
 		printf(" Error in receiving\n");
@@ -222,6 +256,7 @@ int udt_recv()
 	c = strtok_r(NULL,"\n",&d);
 	curr_pkt.pkt_type = (uint16_t)atoi(c);
 
+	printf("\nPacket type in received packet is : %d\n",curr_pkt.pkt_type);
 /*	if((curr_pkt.data = malloc(strlen(d)*sizeof(char))) == NULL)
 	{
 		printf("Error allocating memory\n");

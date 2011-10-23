@@ -16,5 +16,3 @@ server:
 .PHONY: clean 
 clean:
 	rm -f $(out) $(objects)
-
-
