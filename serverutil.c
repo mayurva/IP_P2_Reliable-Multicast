@@ -148,6 +148,7 @@ int udt_send(int seg_index)
 		else{
                         printf("\nACK sent for last packet in file ... closing output file and exiting ... \n\n");
 			fclose(file);
+			free(recv_buffer);
                         pthread_exit(NULL);
                 }
         }

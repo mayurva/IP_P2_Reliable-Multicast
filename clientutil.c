@@ -89,7 +89,7 @@ int udt_send(int seg_index,int server_index)
 	
 	//Clearing Seg_Index's Data part
 	printf("Buf sent::: %s\n\n",buf);
-	strcpy(send_buffer[seg_index].data,"");
+//	strcpy(send_buffer[seg_index].data,"");
 
 	if (sendto(soc,buf, len, 0, (struct sockaddr *)&their_addr, sizeof (their_addr)) == -1) {
        		printf("Error in sending");
@@ -366,6 +366,7 @@ void slide_window()
 		printf("Window slided for 1 packet\n");
 		for(i=0;i<no_of_receivers;i++)
 			send_buffer[oldest_unacked%n].ack[i] = 0;
+		
 		oldest_unacked++;
 	}while(recvd_all_ack(oldest_unacked));
 	printf("Timer will start for segment %d now\n",oldest_unacked);
@@ -402,6 +403,7 @@ void *recv_ack(void *ptr)
 				{
 					//send_buffer[oldest_unacked %n].retransmit[i]=0;
 					udt_send((recvd_seq_num+1)%n,i);
+					
 					
 				}
 				pthread_mutex_unlock(&mutex_ack);
