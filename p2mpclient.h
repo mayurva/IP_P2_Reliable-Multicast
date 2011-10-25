@@ -3,7 +3,7 @@
 
 #define MAX_SEQ 4294967295
 #define MAXLEN 1000
-#define TIMEOUT 100
+#define TIMEOUT 5000
 
 #define TRUE 1
 #define FALSE 0

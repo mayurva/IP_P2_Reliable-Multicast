@@ -168,7 +168,6 @@ void create_segment(uint32_t seg_num,uint16_t pkt_type)
 	printf("Creating Segment for Sequence No: %d at Index %d\n",seg_num,seg_num%n);
 	send_buffer[(seg_num)%n].pkt_type = pkt_type; 
 	send_buffer[(seg_num)%n].checksum = create_checksum(send_buffer[(seg_num)%n].data);
-	send_buffer[(seg_num)%n].ack = (int *)malloc(no_of_receivers*sizeof(int));
 	for(i=0;i<no_of_receivers;i++)
 		send_buffer[seg_num%n].ack[i] = 0;
 }
@@ -649,6 +648,7 @@ int init_sender(int argc,char *argv[])
 		printf("Receiver %d, ip addr %s\n",i,server_addr[i].ip_addr);
 	}
 
+
 	if ((soc = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
 	        printf("Error creating socket\n");
         	exit(-1);
@@ -658,6 +658,9 @@ int init_sender(int argc,char *argv[])
 
 	//printf("Initializing Send Buffer! \n");
 	send_buffer = (segment *)malloc(n*sizeof(segment)); //allocate space for sender buffer 
+
+	for(i=0;i<n;i++)
+                send_buffer[i].ack = (int *)malloc(no_of_receivers*sizeof(int));
 	
 	//printf("Initializing Retransmit Array! \n");
 	//retransmit = (int *)malloc(no_of_receivers*sizeof(int));	
