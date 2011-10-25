@@ -1,8 +1,7 @@
-The data is getting transferred correctly.. but there is a problem with tokenizing. We end up with non null terminated string.
-The problem is at line 128 in server util. Comment is added on that line.
+There is logical flaw in receive ack thread of client program. We have completely messed it up. 
+The receiver will always send an ack for last-in-sequence packet
 
-At the receiver, data part is now delimited. So segments are now constructed properly. But fails for N = 512, MSS = 999. Maybe possible out of order packets. Need to redirect output to a file to check.
-
-_________________________________________________________________________________
-
-LATEST: Timeout VALUE is now 10sec. Program going into a deadlock when checksums mismatch. Main Problem: Data not getting sent across sockets correctly. SERIALIZATION Required. Logic working more or less.A
+The sender however doesn't process it properly..
+If all packets are received correctly without loss or failure... the receiver will always send an ack for 1st packet in the sender window.
+if a packet is lost or incorrectly received... the receiver will send ack for older packet... which is now not in sender window (rather just outside sender window ie if sender window starts at k the ack is for k-1) We need to track these acks and resend the packet. 
+The ack window should probably be from k-1 to k+n 

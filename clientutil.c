@@ -27,6 +27,7 @@ host_info client_addr;
 host_info *server_addr;
 host_info recv_addr;
 struct sockaddr_in sender_addr;
+int recvd_pkt_type;
 
 //below time related variables will need mutex_timer
 int start_timer;
@@ -337,7 +338,7 @@ uint32_t wait_for_ack()
 	c = strtok(NULL,"\n");
 	recvd_seq_num = (uint32_t)atoi(a);
 
-	send_buffer[recvd_seq_num%n].pkt_type = (uint16_t)atoi(c);
+	recvd_pkt_type = (uint16_t)atoi(c);
 	//printf("@@@@ACK Type Set: %x \t for Seq Num: %d in Index %d",send_buffer[recvd_seq_num%n].pkt_type,recvd_seq_num,recvd_seq_num%n);	
 
 	strcpy(recv_addr.ip_addr,recv_addr_arr);
@@ -401,9 +402,7 @@ void *recv_ack(void *ptr)
 				if(send_buffer[(recvd_seq_num+1)%n].ack[i] == 0)
 				{
 					//send_buffer[oldest_unacked %n].retransmit[i]=0;
-					udt_send((recvd_seq_num+1)%n,i);
-					
-					
+					udt_send((recvd_seq_num+1)%n,i);	
 				}
 				pthread_mutex_unlock(&mutex_ack);
 			}
@@ -417,7 +416,7 @@ void *recv_ack(void *ptr)
 		{
 			//Update curr_seq_num's ack array at the correct index using the ack_from which has IP_Address of the current receiver
 
-			if(send_buffer[recvd_seq_num%n].pkt_type==0x00AA){ //indicates 0x00AA in decimal
+			if(recvd_pkt_type==0x00AA){ //indicates 0x00AA in decimal
 				printf("\n\nIn receive thread of client ... setting end_of_task variable and exiting ... \n\n");
 				//LOCK
 				pthread_mutex_lock(&mutex_end_of_task);
@@ -584,7 +583,7 @@ void * rdt_send(void *ptr)
 				timer_seq_num = start_timer;
 				start_timer = -1;
 
-				if(timer_seq_num == oldest_unacked)
+		//		if(timer_seq_num == oldest_unacked)
 					setup_timer();
 			}
 		pthread_mutex_unlock(&mutex_timer);
@@ -614,6 +613,7 @@ int init_sender(int argc,char *argv[])
 	//pthread_t sender_thread;
 //	pthread_t timer_thread;
 	//pthread_t recv_thread;
+	recvd_pkt_type = -1;
 
 	if(argc==1)
 	{
