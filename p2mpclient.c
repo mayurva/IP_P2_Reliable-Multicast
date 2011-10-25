@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
                 exit(1);
         }
 
-        //We will have to join here right??
         if(pthread_join(sender,NULL)!=0)
         {
                 perror("Cannot Join sender_thread!\n");

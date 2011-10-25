@@ -392,7 +392,7 @@ void *recv_ack(void *ptr)
 //				pthread_mutex_unlock(&mutex_ack);
 		
 		
-		if(ret_val == 1)	//double dup ack
+		if(ret_val == TRUE)	//double dup ack
 		{
 			printf("Resending segments due to double dup ack\n");
 			for(i=0;i<no_of_receivers;i++)
@@ -453,6 +453,7 @@ void process_timeout()
 	pthread_mutex_unlock(&mutex_ack);
 
 	pthread_mutex_lock(&mutex_timer);
+	//TODO:not sure if we need mutex for oldest_unack here
 	//printf("Resetting Timer..\n");
 		start_timer = oldest_unacked;
 	pthread_mutex_unlock(&mutex_timer);
@@ -584,7 +585,7 @@ void * rdt_send(void *ptr)
 				start_timer = -1;
 
 				if(timer_seq_num == oldest_unacked)
-				setup_timer();
+					setup_timer();
 			}
 		pthread_mutex_unlock(&mutex_timer);
 		//printf("Unlock from Timer..\n");
