@@ -582,6 +582,8 @@ void * rdt_send(void *ptr)
 				printf("Started timer for segment %d\n",start_timer);
 				timer_seq_num = start_timer;
 				start_timer = -1;
+
+				if(timer_seq_num == oldest_unacked)
 				setup_timer();
 			}
 		pthread_mutex_unlock(&mutex_timer);

@@ -13,7 +13,7 @@
 segment curr_pkt,*recv_buffer;
 int curr_pkt_seq_num;
 //segment *recv_ack_buffer;
-int flag;
+//int flag;
 
 int last_packet;
 int n;
@@ -24,8 +24,6 @@ int buf_counter;
 uint32_t next_seg_seq_num;
 int soc,send_soc;
 struct sockaddr_in sender_addr;
-
-
 
 uint16_t compute_checksum(char *data)
 {
@@ -57,9 +55,9 @@ uint16_t compute_checksum(char *data)
 
 int init_recv_window()
 {
-	recv_buffer = (segment*)malloc(n*sizeof(segment));
+	recv_buffer = (segment *)malloc(n*sizeof(segment));
 	printf("Allocated %d segments of Total length: %d\n",n,(int)(n*sizeof(segment)));
-	next_seg_seq_num = 0;	
+	next_seg_seq_num = 0;	//Indicates that the next expected seq no. is 0
 	buf_counter = 0; //not used`
 }
 
@@ -113,10 +111,12 @@ int udt_send(int seg_index)
         char buf[MAXLEN];
 
         strcpy(buf,"");
+	
+	buf[0]='\0'; //CHANGED
 
 	//SEND THE ACK For Current Packet (seg_index)
 	//Right now overrighting the recv_buffer's pkt_type to indicate that it is now an ACK Packet (Logically) ..
-	recv_buffer[seg_index%n].seq_num = seg_index;
+//	recv_buffer[seg_index%n].seq_num = seg_index;
 	seg_index = seg_index%n;
 	printf("In UDT SEND: Seg index is: %d\t Seq Num is %d\n",seg_index,recv_buffer[seg_index].seq_num);
 //	printf("Pkt type in receive buffer is : %x", (uint16_t)recv_buffer[seg_index].pkt_type);
@@ -196,7 +196,7 @@ int add_to_buffer(int index)
 {
 //        printf("Index is %d\n",index);
 	
-	
+		
         recv_buffer[index].seq_num = curr_pkt.seq_num;
 
 	//ARRIVED INDICATES current packet is arrived
@@ -208,16 +208,18 @@ int add_to_buffer(int index)
         }*/
         strcpy(recv_buffer[index].data,curr_pkt.data);
         //strcat(recv_buffer[index].data,"\0"); 
-
+	
         printf("Length of data in packet with seq_num=%d DATA: %d\n",curr_pkt.seq_num,(int)strlen(curr_pkt.data));
 	curr_pkt_seq_num = curr_pkt.seq_num;
-	if(flag)
+
+	curr_pkt.data[0] = '\0';
+/*	if(flag)
 	{
 	        //free(curr_pkt.data);
 		curr_pkt.data == NULL;
 		flag = 0;
 		//printf("freed!!!\n");
-	}
+	}*/
         return TRUE;
 }
 
@@ -226,12 +228,14 @@ int udt_recv()
 	char *buf;
 	int numbytes,data_length;
 	char *a, *b, *c, *d, *e,*f;
-	flag = 0; 
+	//flag = 0; 
 	int addr_len = sizeof (sender_addr);
 	//strcpy(buf,"");
-	buf = (char*)calloc(MAXLEN,sizeof(char));
+//	buf = (char*)calloc(MAXLEN,sizeof(char));
+
+	buf = (char *)malloc(MAXLEN*sizeof(char));
 	buf[0]='\0';
-	printf("Receiving Data...\n");
+	printf("\nIN UDT RECV - Receiving Data...\n");
 
 	numbytes=recvfrom(soc, buf, MAXLEN , 0,(struct sockaddr *)&sender_addr, &addr_len);
 	if(numbytes == -1 || numbytes == 0) {
@@ -264,7 +268,7 @@ int udt_recv()
 	strcpy(curr_pkt.data,d);
 	d[0] = '\0';
 	fflush(stdout);
-	flag = 1;
+//	flag = 1;
 /*	f = strtok(NULL,"\n"); //'f' contains the data_length passed from sender
 	d = strtok(NULL,"\0"); //This is not allowed, since d is not a null terminated string now.
 //	strcat(d,'\0');
@@ -292,7 +296,9 @@ int udt_recv()
 	strcat(curr_pkt.data,"\0");*/
 	printf("For received data.. length is %d\n data is %s\n",(int)strlen(d),d);
 	printf("For copied data.. length is %d\n data is %s\n\n",(int)strlen(curr_pkt.data),curr_pkt.data);
-	strcpy(d,"");	
+//	strcpy(d,"");	
+
+//	d[0]='\0';
 	free(buf);
 }
 
@@ -314,14 +320,14 @@ int is_gap_filled()
 
 int is_in_recv_window()
 {
-	if(curr_pkt.seq_num<next_seg_seq_num)
+	if(curr_pkt.seq_num<next_seg_seq_num)//recv receives a packet in some previous window
 		return -1;
 	else if(curr_pkt.seq_num<next_seg_seq_num+n)
 	{
 		printf("\nCurr pkt = %d, Next_seg num = %d\n",curr_pkt.seq_num,next_seg_seq_num);
-		return curr_pkt.seq_num-next_seg_seq_num+1;
+		return curr_pkt.seq_num%n;//-next_seg_seq_num+1;
 	}
-	return 0;
+	return n;
 }
 
 //writing 1 MSS Data into file .. called after checksum comparison
@@ -382,18 +388,24 @@ int recv_data()
 	ret_val = is_in_recv_window();
 	//printf("^^^^^^^Ret Val in RECV DATA IS: %d\n",ret_val);
         if(ret_val == -1)
-                return TRUE;
-        else if(ret_val == 0)
+	{
+               // send ack for last correctly received packet 
+	       send_ack(next_seg_seq_num-1);
+	       return TRUE;
+		  
+	}
+        else if(ret_val == n)
                 return FALSE;
 
 	process_ret = process_pkt();
 	if(process_ret == 1) //Add to Buffer, slide the window, send ACK
 	{
-		add_to_buffer(ret_val-1);
+		//add_to_buffer(ret_val-1);
+		add_to_buffer(ret_val);
 	
 		int i;	
-	//	for(i = next_seg_seq_num%n;recv_buffer[i].arrived == TRUE;i=(i+1)%n){
-		for(i=0;recv_buffer[i].arrived ==TRUE;i=(i+1)%n){
+		for(i = next_seg_seq_num%n;recv_buffer[i].arrived == TRUE;i=(i+1)%n){
+	//for(i=0;recv_buffer[i].arrived ==TRUE;i=(i+1)%n){
 			slide_window();
 			write_file(recv_buffer[i].data); //when the window slides, write the corresponding segment to file
 			recv_buffer[i].arrived = FALSE;
@@ -405,7 +417,7 @@ int recv_data()
 	}
 	else if(process_ret == 2) //Add to Buffer, send ACK for most recent in-sequence packet
 	{
-		add_to_buffer(ret_val-1);
+		add_to_buffer(ret_val);
 		//send ACK for most in-sequence packet ... next_seg_seq_num
 		send_ack(next_seg_seq_num-1);
 	}
