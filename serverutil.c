@@ -133,7 +133,7 @@ int udt_send(int seg_index)
                 exit(-1);
 		}
 	}
-	else
+	else if(curr_pkt.pkt_type == 0x5500)
 	{
 		recv_buffer[seg_index].pkt_type = 0X00AA;  //indicates ACK for last packet
 
@@ -209,6 +209,7 @@ int add_to_buffer(int index)
         strcpy(recv_buffer[index].data,curr_pkt.data);
         //strcat(recv_buffer[index].data,"\0"); 
 	
+	printf("\nThe index in the buffer where the segment is buffered is : %d\n",index);
         printf("Length of data in packet with seq_num=%d DATA: %d\n",curr_pkt.seq_num,(int)strlen(curr_pkt.data));
 	curr_pkt_seq_num = curr_pkt.seq_num;
 
@@ -231,10 +232,10 @@ int udt_recv()
 	//flag = 0; 
 	int addr_len = sizeof (sender_addr);
 	//strcpy(buf,"");
-//	buf = (char*)calloc(MAXLEN,sizeof(char));
+	buf = (char*)calloc(MAXLEN,sizeof(char));
 
-	buf = (char *)malloc(MAXLEN*sizeof(char));
-	buf[0]='\0';
+//	buf = (char *)malloc(MAXLEN*sizeof(char));
+//	buf[0]='\0';
 	printf("\nIN UDT RECV - Receiving Data...\n");
 
 	numbytes=recvfrom(soc, buf, MAXLEN , 0,(struct sockaddr *)&sender_addr, &addr_len);
@@ -245,28 +246,34 @@ int udt_recv()
 		//exit(-1);
 		pthread_exit(NULL);
 	}
-	printf("\n\n***********Bytes Received: %d AND DATA IS: %s\n\n",numbytes,buf);	
+	printf("\n\n***********Bytes Received: %d AND DATA IS: \n%s\n\n",numbytes,buf);	
 //	printf("the received string is%s\n",buf);
 //	buf[strlen(buf)] = '\0';
 	//d[0] = '\0';
 	//curr_pkt.data[0] = '\0';
+	
+	//printf("\n'd' = %s\n",d);
 	a = strtok_r(buf,"\n",&d);
 	curr_pkt.seq_num = (uint32_t)atoi(a);
 
+	printf("\n'd' = %s\n",d);
 	b = strtok_r(NULL,"\n",&d);
 	curr_pkt.checksum = (uint16_t)atoi(b);
 
+	printf("\n'd' = %s\n",d);
 	c = strtok_r(NULL,"\n",&d);
 	curr_pkt.pkt_type = (uint16_t)atoi(c);
 
 	printf("\nPacket type in received packet is : %d\n",curr_pkt.pkt_type);
+
+	printf("\n Data received in 'd' is %s",d); 
 /*	if((curr_pkt.data = malloc(strlen(d)*sizeof(char))) == NULL)
 	{
 		printf("Error allocating memory\n");
 		exit(-1);
 	}*/
 	strcpy(curr_pkt.data,d);
-	d[0] = '\0';
+//	d[0] = '\0';
 	fflush(stdout);
 //	flag = 1;
 /*	f = strtok(NULL,"\n"); //'f' contains the data_length passed from sender
@@ -294,11 +301,10 @@ int udt_recv()
 	}
 	strcpy(curr_pkt.data,d);
 	strcat(curr_pkt.data,"\0");*/
-	printf("For received data.. length is %d\n data is %s\n",(int)strlen(d),d);
+//	printf("For received data.. length is %d\n data is %s\n",(int)strlen(d),d);
 	printf("For copied data.. length is %d\n data is %s\n\n",(int)strlen(curr_pkt.data),curr_pkt.data);
-//	strcpy(d,"");	
-
-//	d[0]='\0';
+	strcpy(d,"");	
+	d[0]='\0';
 	free(buf);
 }
 
@@ -350,12 +356,12 @@ int process_pkt()
 		return 1; //
 	}
 	else{  //Curr Pkt is not in sequence
-		if((is_gap_filled() && !is_next_expected()) || (!is_gap_filled() && !is_next_expected())) //Gap is filled but the packet is out of sequence
-		{
+	//	if((is_gap_filled() && !is_next_expected()) || (!is_gap_filled() && !is_next_expected())) //Gap is filled but the packet is out of sequence
+	//	{
 			//Buffer the curr_pkt
 			return 2;
 			
-		}
+	//	}
 	}
 	return 0;
        // while (is_in_sequence())

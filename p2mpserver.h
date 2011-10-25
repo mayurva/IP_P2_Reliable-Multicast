@@ -1,6 +1,6 @@
 #ifndef P2MPSERVER
 #define P2MPSERVER
-#define MAXLEN 1000
+#define MAXLEN 2000
 #define FALSE 0
 #define TRUE 1
 #pragma pack(1)

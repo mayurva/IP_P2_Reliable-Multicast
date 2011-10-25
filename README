@@ -5,4 +5,4 @@ At the receiver, data part is now delimited. So segments are now constructed pro
 
 _________________________________________________________________________________
 
-LATEST: Timeout VALUE is now 10sec. Program going into a deadlock when checksums mismatch. Main Problem: Data not getting sent across sockets correctly. SERIALIZATION Required. Logic working more or less.
+LATEST: Timeout VALUE is now 10sec. Program going into a deadlock when checksums mismatch. Main Problem: Data not getting sent across sockets correctly. SERIALIZATION Required. Logic working more or less.A
