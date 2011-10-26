@@ -133,6 +133,7 @@ int udt_send(int seg_index)
         int addr_len;
         int len;
         char buf[MAXLEN];
+	int ack_pkt_type;
 
         strcpy(buf,"");
 	
@@ -141,14 +142,14 @@ int udt_send(int seg_index)
 	//SEND THE ACK For Current Packet (seg_index)
 	//Right now overrighting the recv_buffer's pkt_type to indicate that it is now an ACK Packet (Logically) ..
 //	recv_buffer[seg_index%n].seq_num = seg_index;
-	seg_index = seg_index%n;
-	printf("In UDT SEND: Seg index is: %d\t Seq Num is %d\n",seg_index,recv_buffer[seg_index].seq_num);
+//	seg_index = seg_index%n;
+	printf("In UDT SEND: Seg index is: %d\t Seq Num is %d\n",seg_index,recv_buffer[seg_index%n].seq_num);
 //	printf("Pkt type in receive buffer is : %x", (uint16_t)recv_buffer[seg_index].pkt_type);
 	if(curr_pkt.pkt_type == 0x5555) //which is 0x5555 in hex
 	{
-		recv_buffer[seg_index].pkt_type = 0xAAAA;  //indicates normal ACK packet 
+		ack_pkt_type = 0xAAAA;  //indicates normal ACK packet 
 
-		sprintf(buf,"%d\n%d\n%d\n",recv_buffer[seg_index].seq_num,0,recv_buffer[seg_index].pkt_type);
+		sprintf(buf,"%d\n%d\n%d\n",seg_index,0,ack_pkt_type);
 
 		len = strlen(buf);
 	        printf("\n\n***********ACK Bytes Sent: %d\n\n",len);
@@ -159,9 +160,9 @@ int udt_send(int seg_index)
 	}
 	else if(curr_pkt.pkt_type == 0x5500)
 	{
-		recv_buffer[seg_index].pkt_type = 0X00AA;  //indicates ACK for last packet
+		ack_pkt_type = 0X00AA;  //indicates ACK for last packet
 
-		sprintf(buf,"%d\n%d\n%d\n",recv_buffer[seg_index].seq_num,0,recv_buffer[seg_index].pkt_type);
+		sprintf(buf,"%d\n%d\n%d\n",seg_index,0,ack_pkt_type);
 
 		len = strlen(buf);
 	        printf("\n\n***********ACK Bytes Sent: %d\n\n",len);
@@ -202,7 +203,7 @@ int udt_send(int seg_index)
 //Sending ack for the curr_pkt_seq_num  (wrapped around to get correct 'recv_buffer' index)  MSS in 'recv_buffer'
 int send_ack(int seg_index)
 {
-		int index = seg_index%n;
+//		int index = seg_index%n;
 		printf("\nSent ACK For Packet: %d",seg_index);
 		udt_send(seg_index);
 
@@ -341,20 +342,21 @@ int is_next_expected()
 		return FALSE;
 }
 
-int is_gap_filled()
+/*int is_gap_filled()
 {
 	if(recv_buffer[(curr_pkt.seq_num%n)-1].seq_num == curr_pkt.seq_num-1 && recv_buffer[(curr_pkt.seq_num%n)+1].seq_num == curr_pkt.seq_num+1)
 		return TRUE;
 	return FALSE;
-}
+}*/
 
 int is_in_recv_window()
 {
+
+	printf("\nCurr pkt = %d, Next_seg num = %d\n",curr_pkt.seq_num,next_seg_seq_num);
 	if(curr_pkt.seq_num<next_seg_seq_num)//recv receives a packet in some previous window
 		return -1;
 	else if(curr_pkt.seq_num<next_seg_seq_num+n)
 	{
-		printf("\nCurr pkt = %d, Next_seg num = %d\n",curr_pkt.seq_num,next_seg_seq_num);
 		return curr_pkt.seq_num%n;//-next_seg_seq_num+1;
 	}
 	return n;
@@ -468,6 +470,7 @@ int recv_data()
 			slide_window();
 			write_file(recv_buffer[i].data); //when the window slides, write the corresponding segment to file
 			recv_buffer[i].arrived = FALSE;
+			printf("i is %d\n",i);
 			//FLUSH i'th index in recv_buffer
 		}
 		//send ACK for curr_pkt.seq_num
