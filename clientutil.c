@@ -90,7 +90,7 @@ int udt_send(int seg_index,int server_index)
 	
 	sprintf(buf,"%u\n%u\n%u\n%s",send_buffer[seg_index].seq_num,send_buffer[seg_index].checksum,send_buffer[seg_index].pkt_type,send_buffer[seg_index].data);
 	len = strlen(buf);
-	printf("\n***********Bytes Sent: %d \tdata length is %d\t seq num is %d\t Buffer index is: %d\t DATA IS: %s\n\n",len,(int)strlen(send_buffer[seg_index].data),send_buffer[seg_index].seq_num,seg_index,send_buffer[seg_index].data);
+	printf("\n***********Bytes Sent: %d \tdata length is %d\t seq num is %d\t Buffer index is: %d\n\n",len,(int)strlen(send_buffer[seg_index].data),send_buffer[seg_index].seq_num,seg_index);
 	
 	//Clearing Seg_Index's Data part
 //	printf("Buf sent::: %s\n\n",buf);
@@ -104,11 +104,12 @@ int udt_send(int seg_index,int server_index)
 }
 
 // Read 1 MSS worth data from file and return the data - reads byte-by-byte
-char * read_file()
+void  read_file(char temp_buf[])
 {
     int j=0;
     
-    char *temp_buf = (char *)malloc(mss*sizeof(char));
+    //char *temp_buf = (char *)calloc(mss,sizeof(char));
+//    char temp_buf[MAXLEN];
     char buff[1];
 
     for(j=0;j<mss;j++)
@@ -119,13 +120,15 @@ char * read_file()
 		fclose(file);
 		file = NULL;
 		printf("***@@@@@@Closing the File \n\n");
-		return temp_buf;
+		return;
+	//	return temp_buf;
 		
 	}
 	temp_buf[j] = buff[0];
    }
    temp_buf[j] = '\0';
-   return temp_buf;
+//   return temp_buf;
+   
 }
 
 uint16_t create_checksum(char *data)
@@ -556,7 +559,7 @@ void * rdt_send(void *ptr)
 		if(reached_end()==TRUE)
 		{
 			printf("\nExiting sender thread in client ... \n\n");
-			free(send_buffer);
+			//free(send_buffer);
 			pthread_exit(NULL);
 		}
 		if(is_buffer_avail())	
@@ -564,14 +567,15 @@ void * rdt_send(void *ptr)
 			next_seq_num=(next_seq_num+1)%MAX_SEQ;
 			printf("Buffer Available: Getting 1 MSS from File!\n");
 			//printf("Next Seq Num is: %d\n",next_seq_num);
-			char *tmp = read_file();
-
+			char tmp[MAXLEN]; 
+			read_file(tmp);
+			
 			strcpy(send_buffer[next_seq_num%n].data,tmp); //copy 1 segment data into sender buffer
                        		
 		//	printf("New Data Read: %s\n",send_buffer[next_seq_num%n].data);
                         send_buffer[next_seq_num%n].data[strlen(send_buffer[next_seq_num%n].data)] = '\0';
 
-	                printf("Data at %d\t is: %s",next_seq_num%n,send_buffer[next_seq_num%n].data);
+//	                printf("Data at %d\t is: %s",next_seq_num%n,send_buffer[next_seq_num%n].data);
 
                        	if(strlen(tmp)!=mss)			
 			{
@@ -580,19 +584,8 @@ void * rdt_send(void *ptr)
 			}
 			else
 				create_segment(next_seq_num,0x5555); //denotes normal data packet		
-		//	if(strstr(tmp,"~") == NULL){ 
-				
-		//		strcpy(send_buffer[next_seq_num%n].data,tmp); //copy 1 segment data into sender buffer
-		//		printf("Data at %d\t is: %s",next_seq_num%n,send_buffer[next_seq_num%n].data);
-		//	}
-		//	else //Condition says that EOF has reached, break from loop. TODO : Last segment containing EOF has pkt loss right now.
-		//	{	
-		//		printf("Breaking!\n");
-		//		break;
-		//	}
-		//	printf("New Data Read: %s\n",send_buffer[next_seq_num%n].data);
-               // 	send_buffer[next_seq_num%n].data[strlen(send_buffer[next_seq_num%n].data)] = '\0';
-	//		create_segment(next_seq_num);
+			
+			//free(tmp);
 			for(j=0;j<no_of_receivers;j++)
 				udt_send(next_seq_num,j);
 			printf("Out of UDT_SEND..\n");

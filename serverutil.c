@@ -16,7 +16,7 @@ int curr_pkt_seq_num;
 //segment *recv_ack_buffer;
 //int flag;
 
-int last_packet;
+int last_packet,last_pkt_seq_num;
 int n;
 double prob;
 FILE *file;
@@ -78,6 +78,7 @@ int init_recv_window()
 	printf("Allocated %d segments of Total length: %d\n",n,(int)(n*sizeof(segment)));
 	next_seg_seq_num = 0;	//Indicates that the next expected seq no. is 0
 	buf_counter = 0; //not used`
+	last_pkt_seq_num = -1;
 }
 
 int init_receiver(int argc, char *argv[])
@@ -145,21 +146,10 @@ int udt_send(int seg_index)
 //	seg_index = seg_index%n;
 	printf("In UDT SEND: Seg index is: %d\t Seq Num is %d\n",seg_index,recv_buffer[seg_index%n].seq_num);
 //	printf("Pkt type in receive buffer is : %x", (uint16_t)recv_buffer[seg_index].pkt_type);
-	if(curr_pkt.pkt_type == 0x5555) //which is 0x5555 in hex
-	{
-		ack_pkt_type = 0xAAAA;  //indicates normal ACK packet 
-
-		sprintf(buf,"%d\n%d\n%d\n",seg_index,0,ack_pkt_type);
-
-		len = strlen(buf);
-	        printf("\n\n***********ACK Bytes Sent: %d\n\n",len);
-	        if (sendto(soc,buf, len, 0, (struct sockaddr *)&sender_addr, sizeof (sender_addr)) == -1) {
-                printf("Error in sending");
-                exit(-1);
-		}
-	}
-	else if(curr_pkt.pkt_type == 0x5500)
-	{
+	if(last_pkt_seq_num == seg_index)
+	{	
+			
+		
 		ack_pkt_type = 0X00AA;  //indicates ACK for last packet
 
 		sprintf(buf,"%d\n%d\n%d\n",seg_index,0,ack_pkt_type);
@@ -177,26 +167,20 @@ int udt_send(int seg_index)
                         pthread_exit(NULL);
                 }
         }
+	else{
+                ack_pkt_type = 0XAAAA;  //indicates Normal ACK
 
+                sprintf(buf,"%d\n%d\n%d\n",seg_index,0,ack_pkt_type);
+
+                len = strlen(buf);
+                printf("\n\n***********ACK Bytes Sent: %d\n\n",len);
+                if (sendto(soc,buf, len, 0, (struct sockaddr *)&sender_addr, sizeof (sender_addr)) == -1) {
+                	printf("Error in sending");
+               		exit(-1);
+		}
+
+	}
         
-//	sprintf(buf,"%d\n%d\n%d\n",recv_buffer[seg_index].seq_num,0,recv_buffer[seg_index].pkt_type);
-        
-/*
-	//socket to send
-        if ((send_soc = socket(AF_INET, SOCK_DGRAM, 0)) == -1) {
-                printf("Error creating socket\n");
-                exit(-1);
-        }
-*/
-/*
-        len = strlen(buf);
-        printf("\n\n***********ACK Bytes Sent: %d",len);
-//      if (sendto(send_soc,buf, len, 0, (struct sockaddr *)&sender_addr, sizeof (sender_addr)) == -1) {
-	if (sendto(soc,buf, len, 0, (struct sockaddr *)&sender_addr, sizeof (sender_addr)) == -1) {
-                printf("Error in sending");
-                exit(-1);
-        }
-*/
 }
 
 
@@ -271,7 +255,7 @@ int udt_recv()
 		//exit(-1);
 		pthread_exit(NULL);
 	}
-	printf("\n\n***********Bytes Received: %d AND DATA IS: \n%s\n\n",numbytes,buf);	
+	printf("\n\n***********Bytes Received: %d\n\n",numbytes);	
 //	printf("the received string is%s\n",buf);
 //	buf[strlen(buf)] = '\0';
 	//d[0] = '\0';
@@ -281,53 +265,25 @@ int udt_recv()
 	a = strtok_r(buf,"\n",&d);
 	curr_pkt.seq_num = (uint32_t)atoi(a);
 
-	printf("\n'd' = %s\n",d);
+//	printf("\n'd' = %s\n",d);
 	b = strtok_r(NULL,"\n",&d);
 	curr_pkt.checksum = (uint16_t)atoi(b);
 
-	printf("\n'd' = %s\n",d);
+//	printf("\n'd' = %s\n",d);
 	c = strtok_r(NULL,"\n",&d);
 	curr_pkt.pkt_type = (uint16_t)atoi(c);
+	if(curr_pkt.pkt_type == 0x5500){
+		last_pkt_seq_num = curr_pkt.seq_num;
+		printf("Last Packet Seq nUm set to: %d\n",last_pkt_seq_num);
+	}
 
 	printf("\nPacket type in received packet is : %d\n",curr_pkt.pkt_type);
 
-	printf("\n Data received in 'd' is %s",d); 
-/*	if((curr_pkt.data = malloc(strlen(d)*sizeof(char))) == NULL)
-	{
-		printf("Error allocating memory\n");
-		exit(-1);
-	}*/
 	strcpy(curr_pkt.data,d);
-//	d[0] = '\0';
 	fflush(stdout);
-//	flag = 1;
-/*	f = strtok(NULL,"\n"); //'f' contains the data_length passed from sender
-	d = strtok(NULL,"\0"); //This is not allowed, since d is not a null terminated string now.
-//	strcat(d,'\0');
-//	e = strtok(a,":");
-//	e = strtok(NULL,":");
-	e = strtok(b,":");
-	e = strtok(NULL,":");
-	e = strtok(c,":");
-	e = strtok(NULL,":");
-	
-	e = strtok(f,":");
-	e = strtok(NULL,":");
-	data_length = (uint16_t)atoi(e);
-
-	fflush(stdout);
-	d[data_length] = '\0'; //delimit the data string	*/
 
 	printf("seq_num: %d, checksum: %x, packet type: %x\n",curr_pkt.seq_num,curr_pkt.checksum,curr_pkt.pkt_type);
-/*	if((curr_pkt.data = (char*)malloc(strlen(d)*sizeof(char)))==NULL)
-	{
-		perror("CANNOT ALLOCATE MEMORY :( For Curr Packet Data\n");
-		exit(1);
-	}
-	strcpy(curr_pkt.data,d);
-	strcat(curr_pkt.data,"\0");*/
-//	printf("For received data.. length is %d\n data is %s\n",(int)strlen(d),d);
-	printf("For copied data.. length is %d\n data is %s\n\n",(int)strlen(curr_pkt.data),curr_pkt.data);
+//	printf("For copied data.. length is %d\n data is %s\n\n",(int)strlen(curr_pkt.data),curr_pkt.data);
 	strcpy(d,"");	
 	d[0]='\0';
 	free(buf);
