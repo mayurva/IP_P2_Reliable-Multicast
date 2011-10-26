@@ -1,5 +1,10 @@
 Worked fine for transfer of both README and 100k.txt to single server with multiple input cases. 
 
+@@For Seg = 0 Data Loss, seg fault at Receiver and then Seg Fault at Sender.
+@@Check if double duplicate condition is getting executed correctly or not.
+
+
+
 I found few erratic behaviors
 
 1. if window size is 5 and 170 is the last packet and packet from last seg (166 to 170) gets lost the sender goes in infinite loop even after trasfer is completed. This is probably because we dont send ack for last seg in such case...
