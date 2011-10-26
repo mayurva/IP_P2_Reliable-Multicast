@@ -7,7 +7,8 @@
 #include <netinet/in.h>
 #include <ifaddrs.h>
 #include <net/if.h>
-
+#include <math.h>
+#include <assert.h>
 #include"p2mpserver.h"
 
 segment curr_pkt,*recv_buffer;
@@ -17,6 +18,7 @@ int curr_pkt_seq_num;
 
 int last_packet;
 int n;
+double prob;
 FILE *file;
 int server_port;
 float p;
@@ -24,6 +26,23 @@ int buf_counter;
 uint32_t next_seg_seq_num;
 int soc,send_soc;
 struct sockaddr_in sender_addr;
+
+
+double generate_random_Probability()
+{
+        long int seed;
+        int rndm,next_free;
+        struct timeval ct;
+
+        gettimeofday(&ct, NULL);
+        seed = (ct.tv_sec + ct.tv_usec);
+        srand(seed);	
+        //return (double)( (rand()%(end - start)) + start ) ;
+	return (double)rand()/(double)RAND_MAX;
+}
+
+
+
 
 uint16_t compute_checksum(char *data)
 {
@@ -78,6 +97,11 @@ int init_receiver(int argc, char *argv[])
         }
         server_port = atoi(argv[1]);
         printf("Server port is: %d\n",server_port);
+
+
+	prob = 0.0f;	
+	prob = atof(argv[4]);
+	printf("Loss Probability is set to: %f\n",prob);
 
 	struct sockaddr_in my_addr;    // my address information
 
@@ -374,6 +398,28 @@ void slide_window()
 	next_seg_seq_num++;
 }
 
+
+// Usable AlmostEqual function .. NOT USING IT RIGHT NOW!
+int AlmostEqual2sComplement(float A, float B, int maxUlps)
+{
+    // Make sure maxUlps is non-negative and small enough that the
+    // default NAN won't compare as equal to anything.
+    assert(maxUlps > 0 && maxUlps < 4 * 1024 * 1024);
+    int aInt = *(int*)&A;
+    // Make aInt lexicographically ordered as a twos-complement int
+    if (aInt < 0)
+        aInt = 0x80000000 - aInt;
+    // Make bInt lexicographically ordered as a twos-complement int
+    int bInt = *(int*)&B;
+    if (bInt < 0)
+        bInt = 0x80000000 - bInt;
+    int intDiff = abs(aInt - bInt);
+    if (intDiff <= maxUlps)
+        return TRUE;
+    return FALSE;
+}
+
+
 int recv_data()
 {
         int ret_val,process_ret;
@@ -382,7 +428,14 @@ int recv_data()
 	//Got a new packet
 	printf("Calling UDT RECV...\n");
 	udt_recv();
-
+	
+	double sample = generate_random_Probability();
+	printf("Random Prob Generated: %f\n",sample);
+	if( sample <=  prob ) //Generated random probability is < Set Loss Probability
+	{
+		printf("Data Loss!\n");
+		return FALSE;
+	}
 	recv_checksum = compute_checksum(curr_pkt.data);
 
 	if(!(compare_checksum(recv_checksum)))

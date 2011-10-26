@@ -1,0 +1,927 @@
+Window size:5
+Server port is: 5000
+Loss Probability is set to: 0.100000
+Allocated 5 segments of Total length: 10045
+Receiver started
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 19 AND DATA IS: 
+0
+57636
+21845
+There
+
+
+'d' = 57636
+21845
+There
+
+'d' = 21845
+There
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is Thereseq_num: 0, checksum: e124, packet type: 5555
+For copied data.. length is 5
+ data is There
+
+Random Prob Generated: 0.430081
+Checksum is e124
+
+Curr pkt = 0, Next_seg num = 0
+
+The index in the buffer where the segment is buffered is : 0
+Length of data in packet with seq_num=0 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 0In UDT SEND: Seg index is: 0	 Seq Num is 0
+
+
+***********ACK Bytes Sent: 10
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 17 AND DATA IS: 
+1
+118
+21845
+ is l
+
+
+'d' = 118
+21845
+ is l
+
+'d' = 21845
+ is l
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is  is lseq_num: 1, checksum: 76, packet type: 5555
+For copied data.. length is 5
+ data is  is l
+
+Random Prob Generated: 0.703576
+Checksum is 76
+
+Curr pkt = 1, Next_seg num = 1
+
+The index in the buffer where the segment is buffered is : 1
+Length of data in packet with seq_num=1 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 1In UDT SEND: Seg index is: 1	 Seq Num is 1
+
+
+***********ACK Bytes Sent: 10
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 19 AND DATA IS: 
+2
+50740
+21845
+ogica
+
+
+'d' = 50740
+21845
+ogica
+
+'d' = 21845
+ogica
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is ogicaseq_num: 2, checksum: c634, packet type: 5555
+For copied data.. length is 5
+ data is ogica
+
+Random Prob Generated: 0.463763
+Checksum is c634
+
+Curr pkt = 2, Next_seg num = 2
+
+The index in the buffer where the segment is buffered is : 2
+Length of data in packet with seq_num=2 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 2In UDT SEND: Seg index is: 2	 Seq Num is 2
+
+
+***********ACK Bytes Sent: 10
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 19 AND DATA IS: 
+3
+52338
+21845
+l fla
+
+
+'d' = 52338
+21845
+l fla
+
+'d' = 21845
+l fla
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is l flaseq_num: 3, checksum: cc72, packet type: 5555
+For copied data.. length is 5
+ data is l fla
+
+Random Prob Generated: 0.168422
+Checksum is cc72
+
+Curr pkt = 3, Next_seg num = 3
+
+The index in the buffer where the segment is buffered is : 3
+Length of data in packet with seq_num=3 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 3In UDT SEND: Seg index is: 3	 Seq Num is 3
+
+
+***********ACK Bytes Sent: 10
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 19 AND DATA IS: 
+4
+65392
+21845
+w in 
+
+
+'d' = 65392
+21845
+w in 
+
+'d' = 21845
+w in 
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is w in seq_num: 4, checksum: ff70, packet type: 5555
+For copied data.. length is 5
+ data is w in 
+
+Random Prob Generated: 0.124188
+Checksum is ff70
+
+Curr pkt = 4, Next_seg num = 4
+
+The index in the buffer where the segment is buffered is : 4
+Length of data in packet with seq_num=4 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 4In UDT SEND: Seg index is: 4	 Seq Num is 4
+
+
+***********ACK Bytes Sent: 10
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 19 AND DATA IS: 
+5
+49460
+21845
+recei
+
+
+'d' = 49460
+21845
+recei
+
+'d' = 21845
+recei
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is receiseq_num: 5, checksum: c134, packet type: 5555
+For copied data.. length is 5
+ data is recei
+
+Random Prob Generated: 0.148962
+Checksum is c134
+
+Curr pkt = 5, Next_seg num = 5
+
+The index in the buffer where the segment is buffered is : 0
+Length of data in packet with seq_num=5 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 5In UDT SEND: Seg index is: 0	 Seq Num is 5
+
+
+***********ACK Bytes Sent: 10
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 18 AND DATA IS: 
+6
+1593
+21845
+ve ac
+
+
+'d' = 1593
+21845
+ve ac
+
+'d' = 21845
+ve ac
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is ve acseq_num: 6, checksum: 639, packet type: 5555
+For copied data.. length is 5
+ data is ve ac
+
+Random Prob Generated: 0.539336
+Checksum is 639
+
+Curr pkt = 6, Next_seg num = 6
+
+The index in the buffer where the segment is buffered is : 1
+Length of data in packet with seq_num=6 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 6In UDT SEND: Seg index is: 1	 Seq Num is 6
+
+
+***********ACK Bytes Sent: 10
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 19 AND DATA IS: 
+7
+44662
+21845
+k thr
+
+
+'d' = 44662
+21845
+k thr
+
+'d' = 21845
+k thr
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is k thrseq_num: 7, checksum: ae76, packet type: 5555
+For copied data.. length is 5
+ data is k thr
+
+Random Prob Generated: 0.515995
+Checksum is ae76
+
+Curr pkt = 7, Next_seg num = 7
+
+The index in the buffer where the segment is buffered is : 2
+Length of data in packet with seq_num=7 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 7In UDT SEND: Seg index is: 2	 Seq Num is 7
+
+
+***********ACK Bytes Sent: 10
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 19 AND DATA IS: 
+8
+51069
+21845
+ead o
+
+
+'d' = 51069
+21845
+ead o
+
+'d' = 21845
+ead o
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is ead oseq_num: 8, checksum: c77d, packet type: 5555
+For copied data.. length is 5
+ data is ead o
+
+Random Prob Generated: 0.140254
+Checksum is c77d
+
+Curr pkt = 8, Next_seg num = 8
+
+The index in the buffer where the segment is buffered is : 3
+Length of data in packet with seq_num=8 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 8In UDT SEND: Seg index is: 3	 Seq Num is 8
+
+
+***********ACK Bytes Sent: 10
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 19 AND DATA IS: 
+9
+52594
+21845
+f cli
+
+
+'d' = 52594
+21845
+f cli
+
+'d' = 21845
+f cli
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is f cliseq_num: 9, checksum: cd72, packet type: 5555
+For copied data.. length is 5
+ data is f cli
+
+Random Prob Generated: 0.498695
+Checksum is cd72
+
+Curr pkt = 9, Next_seg num = 9
+
+The index in the buffer where the segment is buffered is : 4
+Length of data in packet with seq_num=9 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 9In UDT SEND: Seg index is: 4	 Seq Num is 9
+
+
+***********ACK Bytes Sent: 10
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 20 AND DATA IS: 
+10
+46704
+21845
+ent p
+
+
+'d' = 46704
+21845
+ent p
+
+'d' = 21845
+ent p
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is ent pseq_num: 10, checksum: b670, packet type: 5555
+For copied data.. length is 5
+ data is ent p
+
+Random Prob Generated: 0.718251
+Checksum is b670
+
+Curr pkt = 10, Next_seg num = 10
+
+The index in the buffer where the segment is buffered is : 0
+Length of data in packet with seq_num=10 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 10In UDT SEND: Seg index is: 0	 Seq Num is 10
+
+
+***********ACK Bytes Sent: 11
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 20 AND DATA IS: 
+11
+50461
+21845
+rogra
+
+
+'d' = 50461
+21845
+rogra
+
+'d' = 21845
+rogra
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is rograseq_num: 11, checksum: c51d, packet type: 5555
+For copied data.. length is 5
+ data is rogra
+
+Random Prob Generated: 0.791694
+Checksum is c51d
+
+Curr pkt = 11, Next_seg num = 11
+
+The index in the buffer where the segment is buffered is : 1
+Length of data in packet with seq_num=11 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 11In UDT SEND: Seg index is: 1	 Seq Num is 11
+
+
+***********ACK Bytes Sent: 11
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 19 AND DATA IS: 
+12
+3450
+21845
+m. We
+
+
+'d' = 3450
+21845
+m. We
+
+'d' = 21845
+m. We
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is m. Weseq_num: 12, checksum: d7a, packet type: 5555
+For copied data.. length is 5
+ data is m. We
+
+Random Prob Generated: 0.742501
+Checksum is d7a
+
+Curr pkt = 12, Next_seg num = 12
+
+The index in the buffer where the segment is buffered is : 2
+Length of data in packet with seq_num=12 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 12In UDT SEND: Seg index is: 2	 Seq Num is 12
+
+
+***********ACK Bytes Sent: 11
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 19 AND DATA IS: 
+13
+6433
+21845
+ have
+
+
+'d' = 6433
+21845
+ have
+
+'d' = 21845
+ have
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is  haveseq_num: 13, checksum: 1921, packet type: 5555
+For copied data.. length is 5
+ data is  have
+
+Random Prob Generated: 0.216321
+Checksum is 1921
+
+Curr pkt = 13, Next_seg num = 13
+
+The index in the buffer where the segment is buffered is : 3
+Length of data in packet with seq_num=13 DATA: 5
+
+Written! 5 bytes
+Sent ACK For Packet: 13In UDT SEND: Seg index is: 3	 Seq Num is 13
+
+
+***********ACK Bytes Sent: 11
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 17 AND DATA IS: 
+14
+47
+21845
+ comp
+
+
+'d' = 47
+21845
+ comp
+
+'d' = 21845
+ comp
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is  compseq_num: 14, checksum: 2f, packet type: 5555
+For copied data.. length is 5
+ data is  comp
+
+Random Prob Generated: 0.084093
+Data Loss!
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 20 AND DATA IS: 
+15
+45876
+21845
+letel
+
+
+'d' = 45876
+21845
+letel
+
+'d' = 21845
+letel
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is letelseq_num: 15, checksum: b334, packet type: 5555
+For copied data.. length is 5
+ data is letel
+
+Random Prob Generated: 0.897663
+Checksum is b334
+
+Curr pkt = 15, Next_seg num = 14
+
+The index in the buffer where the segment is buffered is : 0
+Length of data in packet with seq_num=15 DATA: 5
+
+Sent ACK For Packet: 13In UDT SEND: Seg index is: 3	 Seq Num is 13
+
+
+***********ACK Bytes Sent: 11
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 20 AND DATA IS: 
+16
+42617
+21845
+y mes
+
+
+'d' = 42617
+21845
+y mes
+
+'d' = 21845
+y mes
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is y messeq_num: 16, checksum: a679, packet type: 5555
+For copied data.. length is 5
+ data is y mes
+
+Random Prob Generated: 0.756646
+Checksum is a679
+
+Curr pkt = 16, Next_seg num = 14
+
+The index in the buffer where the segment is buffered is : 1
+Length of data in packet with seq_num=16 DATA: 5
+
+Sent ACK For Packet: 13In UDT SEND: Seg index is: 3	 Seq Num is 13
+
+
+***********ACK Bytes Sent: 11
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 20 AND DATA IS: 
+17
+49017
+21845
+sed i
+
+
+'d' = 49017
+21845
+sed i
+
+'d' = 21845
+sed i
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is sed iseq_num: 17, checksum: bf79, packet type: 5555
+For copied data.. length is 5
+ data is sed i
+
+Random Prob Generated: 0.614285
+Checksum is bf79
+
+Curr pkt = 17, Next_seg num = 14
+
+The index in the buffer where the segment is buffered is : 2
+Length of data in packet with seq_num=17 DATA: 5
+
+Sent ACK For Packet: 13In UDT SEND: Seg index is: 3	 Seq Num is 13
+
+
+***********ACK Bytes Sent: 11
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 20 AND DATA IS: 
+18
+59502
+21845
+t up.
+
+
+'d' = 59502
+21845
+t up.
+
+'d' = 21845
+t up.
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is t up.seq_num: 18, checksum: e86e, packet type: 5555
+For copied data.. length is 5
+ data is t up.
+
+Random Prob Generated: 0.188414
+Checksum is e86e
+
+Curr pkt = 18, Next_seg num = 14
+
+The index in the buffer where the segment is buffered is : 3
+Length of data in packet with seq_num=18 DATA: 5
+
+Sent ACK For Packet: 13In UDT SEND: Seg index is: 3	 Seq Num is 18
+
+
+***********ACK Bytes Sent: 11
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 17 AND DATA IS: 
+14
+47
+21845
+ comp
+
+
+'d' = 47
+21845
+ comp
+
+'d' = 21845
+ comp
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is  compseq_num: 14, checksum: 2f, packet type: 5555
+For copied data.. length is 5
+ data is  comp
+
+Random Prob Generated: 0.961323
+Checksum is 2f
+
+Curr pkt = 14, Next_seg num = 14
+
+The index in the buffer where the segment is buffered is : 4
+Length of data in packet with seq_num=14 DATA: 5
+
+Written! 5 bytes
+Written! 5 bytes
+Written! 5 bytes
+Written! 5 bytes
+Written! 5 bytes
+Sent ACK For Packet: 18In UDT SEND: Seg index is: 3	 Seq Num is 18
+
+
+***********ACK Bytes Sent: 11
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 17 AND DATA IS: 
+14
+47
+21845
+ comp
+
+
+'d' = 47
+21845
+ comp
+
+'d' = 21845
+ comp
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is  compseq_num: 14, checksum: 2f, packet type: 5555
+For copied data.. length is 5
+ data is  comp
+
+Random Prob Generated: 0.408598
+Checksum is 2f
+
+Sent ACK For Packet: 18In UDT SEND: Seg index is: 3	 Seq Num is 18
+
+
+***********ACK Bytes Sent: 11
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 17 AND DATA IS: 
+14
+47
+21845
+ comp
+
+
+'d' = 47
+21845
+ comp
+
+'d' = 21845
+ comp
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is  compseq_num: 14, checksum: 2f, packet type: 5555
+For copied data.. length is 5
+ data is  comp
+
+Random Prob Generated: 0.627556
+Checksum is 2f
+
+Sent ACK For Packet: 18In UDT SEND: Seg index is: 3	 Seq Num is 18
+
+
+***********ACK Bytes Sent: 11
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 17 AND DATA IS: 
+14
+47
+21845
+ comp
+
+
+'d' = 47
+21845
+ comp
+
+'d' = 21845
+ comp
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is  compseq_num: 14, checksum: 2f, packet type: 5555
+For copied data.. length is 5
+ data is  comp
+
+Random Prob Generated: 0.848111
+Checksum is 2f
+
+Sent ACK For Packet: 18In UDT SEND: Seg index is: 3	 Seq Num is 18
+
+
+***********ACK Bytes Sent: 11
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 17 AND DATA IS: 
+14
+47
+21845
+ comp
+
+
+'d' = 47
+21845
+ comp
+
+'d' = 21845
+ comp
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is  compseq_num: 14, checksum: 2f, packet type: 5555
+For copied data.. length is 5
+ data is  comp
+
+Random Prob Generated: 0.789667
+Checksum is 2f
+
+Sent ACK For Packet: 18In UDT SEND: Seg index is: 3	 Seq Num is 18
+
+
+***********ACK Bytes Sent: 11
+
+Calling UDT RECV...
+
+IN UDT RECV - Receiving Data...
+
+
+***********Bytes Received: 17 AND DATA IS: 
+14
+47
+21845
+ comp
+
+
+'d' = 47
+21845
+ comp
+
+'d' = 21845
+ comp
+
+Packet type in received packet is : 21845
+
+ Data received in 'd' is  comp

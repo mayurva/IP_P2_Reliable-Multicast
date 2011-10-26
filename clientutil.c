@@ -33,7 +33,6 @@ int recvd_pkt_type;
 int start_timer;
 int timer_seq_num;
 
-//int *retransmit; //stores index of receivers to whom segment has to be retransmitted
 
 //below seq number related variables need mutex_seq_num
 int oldest_unacked;   //denotes the no. of oldest unacknowledged segment in buffer
@@ -82,7 +81,6 @@ int udt_send(int seg_index,int server_index)
 	//strcpy(buf,"");
 	buf[0]='\0';
 	seg_index = seg_index%n;
-//	printf("Seg Index is: %d\n",seg_index);
 	
 	sprintf(buf,"%u\n%u\n%u\n%s",send_buffer[seg_index].seq_num,send_buffer[seg_index].checksum,send_buffer[seg_index].pkt_type,send_buffer[seg_index].data);
 	len = strlen(buf);
@@ -90,19 +88,12 @@ int udt_send(int seg_index,int server_index)
 	
 	//Clearing Seg_Index's Data part
 	printf("Buf sent::: %s\n\n",buf);
-//	strcpy(send_buffer[seg_index].data,"");
 
 	if (sendto(soc,buf, len, 0, (struct sockaddr *)&their_addr, sizeof (their_addr)) == -1) {
        		printf("Error in sending");
        		exit(-1);
 	}	
 
-	//Testing for Buf
-//	if(len!=19)
-//	{
-//		printf("$$$ Tokenizing: \n");	
-//		tokenize(buf);
-//	}
 	fflush(stdout);
 }
 

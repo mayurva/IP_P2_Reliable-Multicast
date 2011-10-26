@@ -5,3 +5,10 @@ The sender however doesn't process it properly..
 If all packets are received correctly without loss or failure... the receiver will always send an ack for 1st packet in the sender window.
 if a packet is lost or incorrectly received... the receiver will send ack for older packet... which is now not in sender window (rather just outside sender window ie if sender window starts at k the ack is for k-1) We need to track these acks and resend the packet. 
 The ack window should probably be from k-1 to k+n 
+
+%% : Putting 2 sample outputs with following scenario:
+ ./p2mpclient 192.168.2.5 5000 README 5 5 > sender
+ ./p2mpserver 5000 out.txt 5 0.1 > receiver
+
+The error is in Sender.
+

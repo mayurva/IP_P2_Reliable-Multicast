@@ -15,8 +15,8 @@ int main(int argc, char *argv[])
                 perror("Cannot create sender_thread!\n");
                 exit(1);
         }
-//      pthread_create(&timer_thread,NULL,timeout_process,NULL);
-        if(pthread_create(&receiver,NULL,recv_ack,NULL)!=0){
+        
+	if(pthread_create(&receiver,NULL,recv_ack,NULL)!=0){
                 perror("Cannot create recv_thread!\n");
                 exit(1);
         }

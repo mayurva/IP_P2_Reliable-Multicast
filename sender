@@ -1,0 +1,473 @@
+MSS is:5
+Window size:5
+Server port is: 5000
+No of Receivers: 1
+
+Do you want the sender to bind to eth0 interface?(y/n): 
+
+My public interface and IP is:  eth0 192.168.2.5
+
+Receiver 0, ip addr 192.168.2.5
+After Process Timeout!
+
+Buffer Available: Getting 1 MSS from File!
+Data at 0	 is: ThereCreating Segment for Sequence No: 0 at Index 0
+Checksum is e124
+Waiting for ack
+
+***********Bytes Sent: 19 	data length is 5	 seq num is 0	 Buffer index is: 0	 DATA IS: There
+
+Buf sent::: 0
+57636
+21845
+There
+
+Out of UDT_SEND..
+In earliest Trans....
+Packet 0 is earliest transmitted so need to start timerNext Seq Num in Send Thread is: 1
+Started timer for segment 0
+Buffer Available: Getting 1 MSS from File!
+Data at 1	 is:  is lCreating Segment for Sequence No: 1 at Index 1
+Checksum is 76
+
+***********Bytes Sent: 17 	data length is 5	 seq num is 1	 Buffer index is: 1	 DATA IS:  is l
+
+Buf sent::: 1
+118
+21845
+ is l
+
+Out of UDT_SEND..
+In earliest Trans....
+Next Seq Num in Send Thread is: 2
+Buffer Available: Getting 1 MSS from File!
+Data at 2	 is: ogicaCreating Segment for Sequence No: 2 at Index 2
+Checksum is c634
+
+***********Bytes Sent: 19 	data length is 5	 seq num is 2	 Buffer index is: 2	 DATA IS: ogica
+
+Buf sent::: 2
+50740
+21845
+ogica
+
+Out of UDT_SEND..
+In earliest Trans....
+Next Seq Num in Send Thread is: 3
+Buffer Available: Getting 1 MSS from File!
+Data at 3	 is: l flaCreating Segment for Sequence No: 3 at Index 3
+Checksum is cc72
+
+***********Bytes Sent: 19 	data length is 5	 seq num is 3	 Buffer index is: 3	 DATA IS: l fla
+
+Buf sent::: 3
+52338
+21845
+l fla
+
+Out of UDT_SEND..
+In earliest Trans....
+Next Seq Num in Send Thread is: 4
+Buffer Available: Getting 1 MSS from File!
+Data at 4	 is: w in Creating Segment for Sequence No: 4 at Index 4
+Checksum is ff70
+
+***********Bytes Sent: 19 	data length is 5	 seq num is 4	 Buffer index is: 4	 DATA IS: w in 
+
+Buf sent::: 4
+65392
+21845
+w in 
+
+Out of UDT_SEND..
+In earliest Trans....
+Next Seq Num in Send Thread is: 5
+Received ack for segment num 0 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 0 is: 1
+Sliding Window!...
+Window slided for 1 packet
+Timer will start for segment 1 now
+Waiting for ack
+Received ack for segment num 1 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 1 is: 1
+Sliding Window!...
+Window slided for 1 packet
+Timer will start for segment 2 now
+Waiting for ack
+Received ack for segment num 2 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 2 is: 1
+Sliding Window!...
+Window slided for 1 packet
+Timer will start for segment 3 now
+Waiting for ack
+Received ack for segment num 3 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 3 is: 1
+Sliding Window!...
+Window slided for 1 packet
+Timer will start for segment 4 now
+Waiting for ack
+Received ack for segment num 4 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 4 is: 1
+Sliding Window!...
+Window slided for 1 packet
+Timer will start for segment 5 now
+Waiting for ack
+Buffer Available: Getting 1 MSS from File!
+Data at 0	 is: receiCreating Segment for Sequence No: 5 at Index 0
+Checksum is c134
+
+***********Bytes Sent: 19 	data length is 5	 seq num is 5	 Buffer index is: 0	 DATA IS: recei
+
+Buf sent::: 5
+49460
+21845
+recei
+
+Out of UDT_SEND..
+In earliest Trans....
+Packet 5 is earliest transmitted so need to start timerNext Seq Num in Send Thread is: 6
+Started timer for segment 5
+Buffer Available: Getting 1 MSS from File!
+Data at 1	 is: ve acCreating Segment for Sequence No: 6 at Index 1
+Checksum is 639
+Received ack for segment num 5 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 5 is: 1
+Sliding Window!...
+Window slided for 1 packet
+Timer will start for segment 6 now
+Waiting for ack
+
+***********Bytes Sent: 18 	data length is 5	 seq num is 6	 Buffer index is: 1	 DATA IS: ve ac
+
+Buf sent::: 6
+1593
+21845
+ve ac
+
+Out of UDT_SEND..
+In earliest Trans....
+Packet 6 is earliest transmitted so need to start timerNext Seq Num in Send Thread is: 7
+Started timer for segment 6
+Buffer Available: Getting 1 MSS from File!
+Data at 2	 is: k thrCreating Segment for Sequence No: 7 at Index 2
+Checksum is ae76
+
+***********Bytes Sent: 19 	data length is 5	 seq num is 7	 Buffer index is: 2	 DATA IS: k thr
+
+Buf sent::: 7
+44662
+21845
+k thr
+
+Received ack for segment num 6 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 6 is: 1
+Sliding Window!...
+Window slided for 1 packet
+Timer will start for segment 7 now
+Waiting for ack
+Received ack for segment num 7 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 7 is: 1
+Sliding Window!...
+Window slided for 1 packet
+Timer will start for segment 8 now
+Waiting for ack
+Out of UDT_SEND..
+In earliest Trans....
+Next Seq Num in Send Thread is: 8
+Started timer for segment 8
+Buffer Available: Getting 1 MSS from File!
+Data at 3	 is: ead oCreating Segment for Sequence No: 8 at Index 3
+Checksum is c77d
+
+***********Bytes Sent: 19 	data length is 5	 seq num is 8	 Buffer index is: 3	 DATA IS: ead o
+
+Buf sent::: 8
+51069
+21845
+ead o
+
+Out of UDT_SEND..
+In earliest Trans....
+Packet 8 is earliest transmitted so need to start timerNext Seq Num in Send Thread is: 9
+Started timer for segment 8
+Received ack for segment num 8 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 8 is: 1
+Buffer Available: Getting 1 MSS from File!
+Sliding Window!...
+Window slided for 1 packet
+Timer will start for segment 9 now
+Waiting for ack
+Data at 4	 is: f cliCreating Segment for Sequence No: 9 at Index 4
+Checksum is cd72
+
+***********Bytes Sent: 19 	data length is 5	 seq num is 9	 Buffer index is: 4	 DATA IS: f cli
+
+Buf sent::: 9
+52594
+21845
+f cli
+
+Out of UDT_SEND..
+In earliest Trans....
+Packet 9 is earliest transmitted so need to start timerNext Seq Num in Send Thread is: 10
+Started timer for segment 9
+Buffer Available: Getting 1 MSS from File!
+Data at 0	 is: ent pCreating Segment for Sequence No: 10 at Index 0
+Checksum is b670
+Received ack for segment num 9 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 9 is: 1
+Sliding Window!...
+Window slided for 1 packet
+Timer will start for segment 10 now
+Waiting for ack
+
+***********Bytes Sent: 20 	data length is 5	 seq num is 10	 Buffer index is: 0	 DATA IS: ent p
+
+Buf sent::: 10
+46704
+21845
+ent p
+
+Out of UDT_SEND..
+In earliest Trans....
+Packet 10 is earliest transmitted so need to start timerNext Seq Num in Send Thread is: 11
+Started timer for segment 10
+Buffer Available: Getting 1 MSS from File!
+Data at 1	 is: rograCreating Segment for Sequence No: 11 at Index 1
+Checksum is c51d
+Received ack for segment num 10 and from server 192.168.2.5
+
+***********Bytes Sent: 20 	data length is 5	 seq num is 11	 Buffer index is: 1	 DATA IS: rogra
+
+Updating ack array.. 
+Buf sent::: 11
+50461
+21845
+rogra
+
+ACK[0] for Packet: 10 is: 1
+Sliding Window!...
+Window slided for 1 packet
+Timer will start for segment 11 now
+Waiting for ack
+Out of UDT_SEND..
+In earliest Trans....
+Packet 11 is earliest transmitted so need to start timerNext Seq Num in Send Thread is: 12
+Started timer for segment 11
+Buffer Available: Getting 1 MSS from File!
+Data at 2	 is: m. WeCreating Segment for Sequence No: 12 at Index 2
+Checksum is d7a
+Received ack for segment num 11 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 11 is: 1
+Sliding Window!...
+Window slided for 1 packet
+Timer will start for segment 12 now
+Waiting for ack
+
+***********Bytes Sent: 19 	data length is 5	 seq num is 12	 Buffer index is: 2	 DATA IS: m. We
+
+Buf sent::: 12
+3450
+21845
+m. We
+
+Out of UDT_SEND..
+In earliest Trans....
+Packet 12 is earliest transmitted so need to start timerNext Seq Num in Send Thread is: 13
+Started timer for segment 12
+Buffer Available: Getting 1 MSS from File!
+Data at 3	 is:  haveCreating Segment for Sequence No: 13 at Index 3
+Checksum is 1921
+Received ack for segment num 12 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 12 is: 1
+
+***********Bytes Sent: 19 	data length is 5	 seq num is 13	 Buffer index is: 3	 DATA IS:  have
+
+Sliding Window!...
+Buf sent::: 13
+6433
+21845
+ have
+
+Window slided for 1 packet
+Timer will start for segment 13 now
+Waiting for ack
+Out of UDT_SEND..
+In earliest Trans....
+Packet 13 is earliest transmitted so need to start timerNext Seq Num in Send Thread is: 14
+Started timer for segment 13
+Buffer Available: Getting 1 MSS from File!
+Data at 4	 is:  compCreating Segment for Sequence No: 14 at Index 4
+Checksum is 2f
+Received ack for segment num 13 and from server 192.168.2.5
+
+***********Bytes Sent: 17 	data length is 5	 seq num is 14	 Buffer index is: 4	 DATA IS:  comp
+
+Buf sent::: 14
+47
+21845
+ comp
+
+Updating ack array.. 
+ACK[0] for Packet: 13 is: 1
+Sliding Window!...
+Window slided for 1 packet
+Timer will start for segment 14 now
+Waiting for ack
+Out of UDT_SEND..
+In earliest Trans....
+Packet 14 is earliest transmitted so need to start timerNext Seq Num in Send Thread is: 15
+Started timer for segment 14
+Buffer Available: Getting 1 MSS from File!
+Data at 0	 is: letelCreating Segment for Sequence No: 15 at Index 0
+Checksum is b334
+
+***********Bytes Sent: 20 	data length is 5	 seq num is 15	 Buffer index is: 0	 DATA IS: letel
+
+Buf sent::: 15
+45876
+21845
+letel
+
+Out of UDT_SEND..
+In earliest Trans....
+Next Seq Num in Send Thread is: 16
+Buffer Available: Getting 1 MSS from File!
+Data at 1	 is: y mesCreating Segment for Sequence No: 16 at Index 1
+Checksum is a679
+
+***********Bytes Sent: 20 	data length is 5	 seq num is 16	 Buffer index is: 1	 DATA IS: y mes
+
+Buf sent::: 16
+42617
+21845
+y mes
+
+Received ack for segment num 13 and from server 192.168.2.5
+Waiting for ack
+Out of UDT_SEND..
+In earliest Trans....
+Next Seq Num in Send Thread is: 17
+Buffer Available: Getting 1 MSS from File!
+Data at 2	 is: sed iCreating Segment for Sequence No: 17 at Index 2
+Checksum is bf79
+
+***********Bytes Sent: 20 	data length is 5	 seq num is 17	 Buffer index is: 2	 DATA IS: sed i
+
+Buf sent::: 17
+49017
+21845
+sed i
+
+Received ack for segment num 13 and from server 192.168.2.5
+Waiting for ack
+Out of UDT_SEND..
+In earliest Trans....
+Next Seq Num in Send Thread is: 18
+Buffer Available: Getting 1 MSS from File!
+Data at 3	 is: t up.Creating Segment for Sequence No: 18 at Index 3
+Checksum is e86e
+
+***********Bytes Sent: 20 	data length is 5	 seq num is 18	 Buffer index is: 3	 DATA IS: t up.
+
+Buf sent::: 18
+59502
+21845
+t up.
+
+Received ack for segment num 13 and from server 192.168.2.5
+Waiting for ack
+Out of UDT_SEND..
+In earliest Trans....
+Next Seq Num in Send Thread is: 19
+Received ack for segment num 18 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 18 is: 1
+Waiting for ack
+Timeout!!! resending segment 14 to all an_ack receivers
+***********Bytes Sent: 17 	data length is 5	 seq num is 14	 Buffer index is: 4	 DATA IS:  comp
+
+Buf sent::: 14
+47
+21845
+ comp
+
+Started timer for segment 14
+Received ack for segment num 18 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 18 is: 2
+Waiting for ack
+Timeout!!! resending segment 14 to all an_ack receivers
+***********Bytes Sent: 17 	data length is 5	 seq num is 14	 Buffer index is: 4	 DATA IS:  comp
+
+Buf sent::: 14
+47
+21845
+ comp
+
+Started timer for segment 14
+Received ack for segment num 18 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 18 is: 3
+This is second duplicate ack
+Resending segments due to double dup ack
+
+***********Bytes Sent: 17 	data length is 5	 seq num is 14	 Buffer index is: 4	 DATA IS:  comp
+
+Buf sent::: 14
+47
+21845
+ comp
+
+Waiting for ack
+Received ack for segment num 18 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 18 is: 2
+Waiting for ack
+Timeout!!! resending segment 14 to all an_ack receivers
+***********Bytes Sent: 17 	data length is 5	 seq num is 14	 Buffer index is: 4	 DATA IS:  comp
+
+Buf sent::: 14
+47
+21845
+ comp
+
+Started timer for segment 14
+Received ack for segment num 18 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 18 is: 3
+This is second duplicate ack
+Resending segments due to double dup ack
+
+***********Bytes Sent: 17 	data length is 5	 seq num is 14	 Buffer index is: 4	 DATA IS:  comp
+
+Buf sent::: 14
+47
+21845
+ comp
+
+Waiting for ack
+Received ack for segment num 18 and from server 192.168.2.5
+Updating ack array.. 
+ACK[0] for Packet: 18 is: 2
+Waiting for ack
+Timeout!!! resending segment 14 to all an_ack receivers
+***********Bytes Sent: 17 	data length is 5	 seq num is 14	 Buffer index is: 4	 DATA IS:  comp
+
+Buf sent::: 14
+47
+21845
+ comp
+
