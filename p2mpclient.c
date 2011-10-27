@@ -9,8 +9,13 @@
 int main(int argc, char *argv[])
 {
 	pthread_t sender,receiver;
+        struct timeval start, end;
+
+
 	init_sender(argc,argv);
 
+
+	gettimeofday(&start,NULL);
 	if(pthread_create(&sender,NULL,rdt_send,NULL)!=0){
                 perror("Cannot create sender_thread!\n");
                 exit(1);
@@ -32,6 +37,8 @@ int main(int argc, char *argv[])
                perror("Cannot Join recv_thread!\n");
                 exit(1);
         }
+	gettimeofday(&end, NULL);
+	printf("Time taken for Data Transfer (Microseconds): %d\n",(int)(end.tv_usec-start.tv_usec));
 
 }
 	
