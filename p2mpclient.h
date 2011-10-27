@@ -19,7 +19,7 @@ typedef struct segment_t{
 #pragma pack(0)
 
 typedef struct host_info_t{
-//      int portnum;
+        int portnum;
         char iface_name[64];
         char ip_addr[128];
 } host_info;

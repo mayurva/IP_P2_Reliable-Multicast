@@ -82,7 +82,8 @@ int udt_send(int seg_index,int server_index)
     	}
 
 	their_addr.sin_family = AF_INET;     // host byte order
-	their_addr.sin_port = htons(server_port); // short, network byte order
+	//their_addr.sin_port = htons(server_port); // short, network byte order
+	their_addr.sin_port = htons(server_addr[server_index].portnum);
 	their_addr.sin_addr = *((struct in_addr *)he->h_addr);
 	//strcpy(buf,"");
 	buf[0]='\0';
@@ -305,7 +306,7 @@ int update_ack_arr(int recvd_seq_num)
 		for(i=0;i<no_of_receivers;i++)
 		{
 			//printf("Server_addr: %s\t Recv_addr: %s\n",server_addr[i].ip_addr,recv_addr.ip_addr);
-			if(strcmp(server_addr[i].ip_addr,recv_addr.ip_addr)==0)
+			if(strcmp(server_addr[i].ip_addr,recv_addr.ip_addr)==0 && server_addr[i].portnum == recv_addr.portnum) //both IP and Port to be compared now
 			{
 				if(ack_buffer[i].ack_seq_num == recvd_seq_num)
 				{
@@ -363,7 +364,8 @@ uint32_t wait_for_ack()
 	//printf("@@@@ACK Type Set: %x \t for Seq Num: %d in Index %d",send_buffer[recvd_seq_num%n].pkt_type,recvd_seq_num,recvd_seq_num%n);	
 
 	strcpy(recv_addr.ip_addr,recv_addr_arr);
-	printf("Received ack for segment num %d and from server %s\n",recvd_seq_num,recv_addr_arr);
+	recv_addr.portnum = (int)ntohs(sender_addr.sin_port);
+	printf("Received ack for segment num %d and from server %s WITH Port %d\n",recvd_seq_num,recv_addr_arr,recv_addr.portnum);
 //	strcpy(ack_from,recv_addr);
 	return recvd_seq_num;		
 }
@@ -655,25 +657,31 @@ int init_sender(int argc,char *argv[])
 		printf("File opening failed\n");
 		exit(-1);
 	}
-	server_port = atoi(argv[argc-4]);
-	printf("Server port is: %d\n",server_port);
+//	server_port = atoi(argv[argc-4]);
+//	printf("Server port is: %d\n",server_port);
 
 	//populate_public_ip();
 //	populate_server_ip(argc);
 	
-	no_of_receivers = argc - 5;
+	no_of_receivers = ceil((argc - 4)/2);
 	printf("No of Receivers: %d\n",no_of_receivers);
 	populate_public_ip();
 	server_addr = (host_info*)malloc(sizeof(host_info)*(no_of_receivers));	
 	
-	for(i=argc-5;i>=1;i--){
-		strcpy(server_addr[i-1].ip_addr,argv[i]);
-	}
+//	for(i=argc-5;i>=1;i--){
+//		strcpy(server_addr[i-1].ip_addr,argv[i]);
+//	}
 
+	printf("Argc-4: %s\n",argv[argc-4]);
+	int j=no_of_receivers-1;
+	for(i = argc-4;i>=1;i=i-2){
+		server_addr[j].portnum = atoi(argv[i]);		
+		strcpy(server_addr[j--].ip_addr,argv[i-1]);
+	}
 	//printf("no of receivers: %d\n",no_of_receivers);
 	for(i=0;i<no_of_receivers;i++)
 	{
-		printf("Receiver %d, ip addr %s\n",i,server_addr[i].ip_addr);
+		printf("Receiver %d, ip addr %s, portnum: %d\n",i,server_addr[i].ip_addr,server_addr[i].portnum);
 	}
 
 

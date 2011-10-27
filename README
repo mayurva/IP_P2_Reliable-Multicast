@@ -1,3 +1,8 @@
+@@ Now multiple receivers on 1 machine and client on same machine works. The p2mpclient is started as follows now:
+
+./p2mpclient <ip1> <port1> <ip2> <port2> FILE_NAME N MSS
+
+
 Worked fine for transfer of both README and 100k.txt to single server with multiple input cases. 
 
 @@For Seg = 0 Data Loss, seg fault at Receiver and then Seg Fault at Sender.
