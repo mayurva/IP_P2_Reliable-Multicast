@@ -27,6 +27,12 @@ uint32_t next_seg_seq_num;
 int soc,send_soc;
 struct sockaddr_in sender_addr;
 
+void cleanup()
+{
+	free(recv_buffer);
+	shutdown(soc,SHUT_RDWR);
+	close(soc);
+}
 
 double generate_random_Probability()
 {
@@ -78,7 +84,7 @@ int init_recv_window()
 	//HIDEprintf("Allocated %d segments of Total length: %d\n",n,(int)(n*sizeof(segment)));
 	next_seg_seq_num = 0;	//Indicates that the next expected seq no. is 0
 	buf_counter = 0; //not used`
-	last_pkt_seq_num = -1;
+	last_pkt_seq_num = -2;
 }
 
 int init_receiver(int argc, char *argv[])
@@ -161,9 +167,9 @@ int udt_send(int seg_index)
                 exit(-1);
 		}
 		else{
-                        printf("\nACK sent for last packet in file ... closing output file and exiting ... \n\n");
+                        //HIDEprintf("\nACK sent for last packet in file ... closing output file and exiting ... \n\n");
 			fclose(file);
-			free(recv_buffer);
+			//free(recv_buffer);
                         pthread_exit(NULL);
                 }
         }

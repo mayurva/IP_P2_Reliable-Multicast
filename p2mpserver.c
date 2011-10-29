@@ -15,5 +15,6 @@ int main(int argc,char *argv[])
 //		if(ret_val)	
 //			send_ack();
 	}while(1);
+	cleanup();
 	return 0;
 }

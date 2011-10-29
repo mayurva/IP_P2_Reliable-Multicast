@@ -26,19 +26,23 @@ int main(int argc, char *argv[])
                 exit(1);
         }
 
+	if(pthread_join(receiver,NULL)!=0)
+        {
+               perror("Cannot Join recv_thread!\n");
+                exit(1);
+        }
+	else printf("Receiver Exited\n");
+
         if(pthread_join(sender,NULL)!=0)
         {
                 perror("Cannot Join sender_thread!\n");
                 exit(1);
         }
 
-       if(pthread_join(receiver,NULL)!=0)
-        {
-               perror("Cannot Join recv_thread!\n");
-                exit(1);
-        }
+	
 	gettimeofday(&end, NULL);
-	printf("Time taken for Data Transfer (Microseconds): %d\n",(int)(end.tv_usec-start.tv_usec));
+	printf("Time taken for Data Transfer (Microseconds): %15ld\n",end.tv_usec-start.tv_usec + (end.tv_sec-start.tv_sec)*1000000);
+	cleanup();
 
 }
 	
