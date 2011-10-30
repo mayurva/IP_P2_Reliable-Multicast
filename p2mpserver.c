@@ -12,8 +12,6 @@ int main(int argc,char *argv[])
 	do
 	{
 		ret_val = recv_data();
-//		if(ret_val)	
-//			send_ack();
 	}while(1);
 	cleanup();
 	return 0;

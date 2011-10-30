@@ -41,10 +41,10 @@ double generate_random_Probability()
         struct timeval ct;
 
         gettimeofday(&ct, NULL);
-        seed = (ct.tv_sec + ct.tv_usec);
+        seed = (ct.tv_usec)*RAND_MAX + rand()%RAND_MAX;
         srand(seed);	
         //return (double)( (rand()%(end - start)) + start ) ;
-	return (double)rand()/(double)RAND_MAX;
+	return ((double)(rand())/((double)RAND_MAX+1) * 5);
 }
 
 
@@ -73,7 +73,7 @@ uint16_t compute_checksum(char *data)
 	// Take the one's complement of sum
 	sum = ~sum;
 
-	//HIDEprintf("Checksum is %x\n",(uint16_t)sum);
+	//printf("Checksum is %x\n",(uint16_t)sum);
 	return ((uint16_t) sum);
 
 }
@@ -141,6 +141,7 @@ int udt_send(int seg_index)
         int len;
         char buf[MAXLEN];
 	int ack_pkt_type;
+//HIDE	printf("Seg index is %d\n",seg_index);
 
         strcpy(buf,"");
 	
@@ -150,7 +151,8 @@ int udt_send(int seg_index)
 	//Right now overrighting the recv_buffer's pkt_type to indicate that it is now an ACK Packet (Logically) ..
 //	recv_buffer[seg_index%n].seq_num = seg_index;
 //	seg_index = seg_index%n;
-	//HIDEprintf("In UDT SEND: Seg index is: %d\t Seq Num is %d\n",seg_index,recv_buffer[seg_index%n].seq_num);
+//THE MISTAKE	if(seg_index>0)
+		//HIDEprintf("In UDT SEND: Seg index is: %d\t Seq Num is %d\n",seg_index,recv_buffer[seg_index%n].seq_num);
 //	printf("Pkt type in receive buffer is : %x", (uint16_t)recv_buffer[seg_index].pkt_type);
 	if(last_pkt_seq_num == seg_index)
 	{	
@@ -163,11 +165,11 @@ int udt_send(int seg_index)
 		len = strlen(buf);
 	        //HIDEprintf("\n\n***********ACK Bytes Sent: %d\n\n",len);
 	        if (sendto(soc,buf, len, 0, (struct sockaddr *)&sender_addr, sizeof (sender_addr)) == -1) {
-                printf("Error in sending");
+                //HIDEprintf("Error in sending");
                 exit(-1);
 		}
 		else{
-                        //HIDEprintf("\nACK sent for last packet in file ... closing output file and exiting ... \n\n");
+                      //HIDE  printf("\nACK sent for last packet in file ... closing output file and exiting ... \n\n");
 			fclose(file);
 			//free(recv_buffer);
                         pthread_exit(NULL);
@@ -224,8 +226,8 @@ int add_to_buffer(int index)
         strcpy(recv_buffer[index].data,curr_pkt.data);
         //strcat(recv_buffer[index].data,"\0"); 
 	
-	//HIDEprintf("\nThe index in the buffer where the segment is buffered is : %d\n",index);
-        //HIDEprintf("Length of data in packet with seq_num=%d DATA: %d\n",curr_pkt.seq_num,(int)strlen(curr_pkt.data));
+//HIDE	printf("\nThe index in the buffer where the segment is buffered is : %d\n",index);
+        //printf("Length of data in packet with seq_num=%d DATA: %d\n",curr_pkt.seq_num,(int)strlen(curr_pkt.data));
 	curr_pkt_seq_num = curr_pkt.seq_num;
 
 	curr_pkt.data[0] = '\0';
@@ -251,7 +253,7 @@ int udt_recv()
 
 //	buf = (char *)malloc(MAXLEN*sizeof(char));
 //	buf[0]='\0';
-	//HIDEprintf("\nIN UDT RECV - Receiving Data...\n");
+	//printf("\nIN UDT RECV - Receiving Data...\n");
 
 	numbytes=recvfrom(soc, buf, MAXLEN , 0,(struct sockaddr *)&sender_addr, &addr_len);
 	if(numbytes == -1 || numbytes == 0) {
@@ -283,7 +285,7 @@ int udt_recv()
 		//HIDEprintf("Last Packet Seq nUm set to: %d\n",last_pkt_seq_num);
 	}
 
-	//HIDEprintf("\nPacket type in received packet is : %d\n",curr_pkt.pkt_type);
+	//printf("\nPacket type in received packet is : %d\n",curr_pkt.pkt_type);
 
 	strcpy(curr_pkt.data,d);
 	fflush(stdout);
@@ -390,11 +392,11 @@ int recv_data()
         uint16_t recv_checksum;
 
 	//Got a new packet
-	//HIDEprintf("Calling UDT RECV...\n");
+//	printf("Calling UDT RECV...\n");
 	udt_recv();
 	
 	double sample = generate_random_Probability();
-	//HIDEprintf("Random Prob Generated: %f\n",sample);
+//	printf("Random Prob Generated: %f\n",sample);
 	if( sample <=  prob ) //Generated random probability is < Set Loss Probability
 	{
 		printf("Packet Loss, Sequence Number: %d\n",curr_pkt.seq_num);
@@ -404,7 +406,7 @@ int recv_data()
 
 	if(!(compare_checksum(recv_checksum)))
 	{
-		//HIDEprintf("Checksum mismatch\n");
+//		printf("Checksum mismatch\n");
                return FALSE; //Discard and no ACK Sent
 	}
 
@@ -429,12 +431,14 @@ int recv_data()
 		int i;	
 		for(i = next_seg_seq_num%n;recv_buffer[i].arrived == TRUE;i=(i+1)%n){
 	//for(i=0;recv_buffer[i].arrived ==TRUE;i=(i+1)%n){
+			//HIDEprintf("Before slide window\n");
 			slide_window();
 			write_file(recv_buffer[i].data); //when the window slides, write the corresponding segment to file
 			recv_buffer[i].arrived = FALSE;
 			//HIDEprintf("i is %d\n",i);
 			//FLUSH i'th index in recv_buffer
 		}
+		//HIDEprintf("Sending ack\n");
 		//send ACK for curr_pkt.seq_num
 		send_ack(next_seg_seq_num-1);
 		
