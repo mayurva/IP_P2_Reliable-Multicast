@@ -1,3 +1,6 @@
+ISSUES RESOLVED. Now Working for Multiple Inputs, tested for maximum of 14MB Text File transfer from 1 sender to 5 receivers.
+For help on Running the system, please contact one of the collaborators.
+
 @@ Now multiple receivers on 1 machine and client on same machine works. The p2mpclient is started as follows now:
 
 ./p2mpclient <ip1> <port1> <ip2> <port2> FILE_NAME N MSS
